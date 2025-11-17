@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run --quiet --script
 """
-Example of using Root Signals MCP with Pydantic-AI
+Example of using Scorable MCP with Pydantic-AI
 run it with: OPENAI_API_KEY=... OPENAI_BASE_URL=... uv run example_pydantic-ai.py
 """
 
@@ -28,7 +28,7 @@ agent_prompt = """
     </instructions>
 
     <acceptance_criteria>
-    - Response candidate must score above 0.7 as indicated by Root Signals evaluators. Use the contents of the policy and current_state tags as the context parameter.
+    - Response candidate must score above 0.7 as indicated by Scorable evaluators. Use the contents of the policy and current_state tags as the context parameter.
     - At least 2 evaluators from the list of evaluators have been used on your response candidate
     - If evaluators are not available or give errors, respond to the customer with a temporary apology
     </acceptance_criteria>
@@ -53,7 +53,7 @@ agent_prompt = """
     """.strip()
 
 # Assumes the MCP server is already running
-root_signals_server = MCPServerHTTP(url="http://localhost:9090/sse")
+scorable_server = MCPServerHTTP(url="http://localhost:9090/sse")
 
 provider = OpenAIProvider(
     api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL")
@@ -72,7 +72,7 @@ class RoomBooking(BaseModel):
 agent = Agent(
     model,
     system_prompt=agent_prompt,
-    mcp_servers=[root_signals_server],
+    mcp_servers=[scorable_server],
     result_type=RoomBooking,
     end_strategy="exhaustive",  # this allows the agent do do multiple tool calls before responding
 )

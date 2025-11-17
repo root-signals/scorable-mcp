@@ -1,4 +1,4 @@
-"""SSE transport for the RootSignals MCP Server.
+"""SSE transport for the Scorable MCP Server.
 
 This module provides a dedicated implementation of the MCP server using
 Server-Sent Events (SSE) transport for network/Docker environments.
@@ -18,14 +18,14 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
 
-from root_signals_mcp.core import RootMCPServerCore
-from root_signals_mcp.settings import settings
+from scorable_mcp.core import RootMCPServerCore
+from scorable_mcp.settings import settings
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper()),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-logger = logging.getLogger("root_signals_mcp.sse")
+logger = logging.getLogger("scorable_mcp.sse")
 
 
 class SSEMCPServer:
@@ -103,8 +103,8 @@ if __name__ == "__main__":
         host = os.environ.get("HOST", settings.host)
         port = int(os.environ.get("PORT", settings.port))
 
-        logger.info("Starting RootSignals MCP Server")
-        logger.info(f"Targeting API: {settings.root_signals_api_url}")
+        logger.info("Starting Scorable MCP Server")
+        logger.info(f"Targeting API: {settings.scorable_api_url}")
         logger.info(f"Environment: {settings.env}")
         logger.info(f"Transport: {settings.transport}")
         logger.info(f"Host: {host}, Port: {port}")

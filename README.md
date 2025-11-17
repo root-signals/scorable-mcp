@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img width="600" alt="Root Signals logo" src="https://app.rootsignals.ai/images/root-signals-color.svg" loading="lazy">
+  <img width="600" alt="Scorable logo" src="https://scorable.ai/images/scorable-color.svg" loading="lazy">
 </h1>
 
 <p align="center" class="large-text">
@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://huggingface.co/root-signals">
+  <a href="https://huggingface.co/scorable">
     <img src="https://img.shields.io/badge/HuggingFace-FF9D00?style=for-the-badge&logo=huggingface&logoColor=white&scale=2" />
   </a>
 
@@ -15,26 +15,26 @@
     <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white&scale=2" />
   </a>
 
-  <a href="https://sdk.rootsignals.ai/en/latest/">
+  <a href="https://sdk.scorable.ai/en/latest/">
     <img src="https://img.shields.io/badge/Documentation-E53935?style=for-the-badge&logo=readthedocs&logoColor=white&scale=2" />
   </a>
 
-  <a href="https://app.rootsignals.ai/demo-user">
+  <a href="https://scorable.ai/demo-user">
     <img src="https://img.shields.io/badge/Temporary_API_Key-15a20b?style=for-the-badge&logo=keycdn&logoColor=white&scale=2" />
   </a>
 </p>
 
-# Root Signals MCP Server
+# Scorable MCP Server
 
-A [Model Context Protocol](https://modelcontextprotocol.io/introduction) (*MCP*) server that exposes **Root Signals** evaluators as tools for AI assistants & agents.
+A [Model Context Protocol](https://modelcontextprotocol.io/introduction) (*MCP*) server that exposes **Scorable** evaluators as tools for AI assistants & agents.
 
 ## Overview
 
-This project serves as a bridge between Root Signals API and MCP client applications, allowing AI assistants and agents to evaluate responses against various quality criteria.
+This project serves as a bridge between Scorable API and MCP client applications, allowing AI assistants and agents to evaluate responses against various quality criteria.
 
 ## Features
 
-- Exposes Root Signals evaluators as MCP tools
+- Exposes Scorable evaluators as MCP tools
 - Implements SSE for network deployment
 - Compatible with various MCP clients such as [Cursor](https://docs.cursor.com/context/model-context-protocol)
 
@@ -42,39 +42,39 @@ This project serves as a bridge between Root Signals API and MCP client applicat
 
 The server exposes the following tools:
 
-1. `list_evaluators` - Lists all available evaluators on your Root Signals account
+1. `list_evaluators` - Lists all available evaluators on your Scorable account
 2. `run_evaluation` - Runs a standard evaluation using a specified evaluator ID
 3. `run_evaluation_by_name` - Runs a standard evaluation using a specified evaluator name
 6. `run_coding_policy_adherence` - Runs a coding policy adherence evaluation using policy documents such as AI rules files
-7. `list_judges` - Lists all available judges on your Root Signals account. A judge is a collection of evaluators forming LLM-as-a-judge.
+7. `list_judges` - Lists all available judges on your Scorable account. A judge is a collection of evaluators forming LLM-as-a-judge.
 8. `run_judge` - Runs a judge using a specified judge ID
 
 
 ## How to use this server
 
 #### 1. Get Your API Key
-[Sign up & create a key](https://app.rootsignals.ai/settings/api-keys) or [generate a temporary key](https://app.rootsignals.ai/demo-user)
+[Sign up & create a key](https://scorable.ai/settings/api-keys) or [generate a temporary key](https://scorable.ai/demo-user)
 
 #### 2. Run the MCP Server
 
 #### 4. with sse transport on docker (recommended)
 ```bash
-docker run -e ROOT_SIGNALS_API_KEY=<your_key> -p 0.0.0.0:9090:9090 --name=rs-mcp -d ghcr.io/root-signals/root-signals-mcp:latest
+docker run -e SCORABLE_API_KEY=<your_key> -p 0.0.0.0:9090:9090 --name=rs-mcp -d ghcr.io/scorable/scorable-mcp:latest
 ```
 
 You should see some logs (note: `/mcp` is the new preferred endpoint; `/sse` is still available for backward‑compatibility)
 
 ```bash
 docker logs rs-mcp
-2025-03-25 12:03:24,167 - root_mcp_server.sse - INFO - Starting RootSignals MCP Server v0.1.0
-2025-03-25 12:03:24,167 - root_mcp_server.sse - INFO - Environment: development
-2025-03-25 12:03:24,167 - root_mcp_server.sse - INFO - Transport: stdio
-2025-03-25 12:03:24,167 - root_mcp_server.sse - INFO - Host: 0.0.0.0, Port: 9090
-2025-03-25 12:03:24,168 - root_mcp_server.sse - INFO - Initializing MCP server...
-2025-03-25 12:03:24,168 - root_mcp_server - INFO - Fetching evaluators from RootSignals API...
-2025-03-25 12:03:25,627 - root_mcp_server - INFO - Retrieved 100 evaluators from RootSignals API
-2025-03-25 12:03:25,627 - root_mcp_server.sse - INFO - MCP server initialized successfully
-2025-03-25 12:03:25,628 - root_mcp_server.sse - INFO - SSE server listening on http://0.0.0.0:9090/sse
+2025-03-25 12:03:24,167 - scorable_mcp.sse - INFO - Starting Scorable MCP Server v0.1.0
+2025-03-25 12:03:24,167 - scorable_mcp.sse - INFO - Environment: development
+2025-03-25 12:03:24,167 - scorable_mcp.sse - INFO - Transport: stdio
+2025-03-25 12:03:24,167 - scorable_mcp.sse - INFO - Host: 0.0.0.0, Port: 9090
+2025-03-25 12:03:24,168 - scorable_mcp.sse - INFO - Initializing MCP server...
+2025-03-25 12:03:24,168 - scorable_mcp - INFO - Fetching evaluators from Scorable API...
+2025-03-25 12:03:25,627 - scorable_mcp - INFO - Retrieved 100 evaluators from Scorable API
+2025-03-25 12:03:25,627 - scorable_mcp.sse - INFO - MCP server initialized successfully
+2025-03-25 12:03:25,628 - scorable_mcp.sse - INFO - SSE server listening on http://0.0.0.0:9090/sse
 ```
 
 From all other clients that support SSE transport - add the server to your config, for example in Cursor:
@@ -82,7 +82,7 @@ From all other clients that support SSE transport - add the server to your confi
 ```json
 {
     "mcpServers": {
-        "root-signals": {
+        "scorable": {
             "url": "http://localhost:9090/sse"
         }
     }
@@ -97,11 +97,11 @@ In cursor / claude desktop etc:
 ```yaml
 {
     "mcpServers": {
-        "root-signals": {
+        "scorable": {
             "command": "uvx",
-            "args": ["--from", "git+https://github.com/root-signals/root-signals-mcp.git", "stdio"],
+            "args": ["--from", "git+https://github.com/scorable/scorable-mcp.git", "stdio"],
             "env": {
-                "ROOT_SIGNALS_API_KEY": "<myAPIKey>"
+                "SCORABLE_API_KEY": "<myAPIKey>"
             }
         }
     }
@@ -113,14 +113,14 @@ In cursor / claude desktop etc:
 <details>
 <summary style="font-size: 1.3em;"><b>1. Evaluate and improve Cursor Agent explanations</b></summary><br>
 
-Let's say you want an explanation for a piece of code. You can simply instruct the agent to evaluate its response and improve it with Root Signals evaluators:
+Let's say you want an explanation for a piece of code. You can simply instruct the agent to evaluate its response and improve it with Scorable evaluators:
 
 <h1 align="center">
   <img width="750" alt="Use case example image 1" src="https://github.com/user-attachments/assets/bb457e05-038a-4862-aae3-db030aba8a7c" loading="lazy">
 </h1>
 
 After the regular LLM answer, the agent can automatically
-- discover appropriate evaluators via Root Signals MCP (`Conciseness` and `Relevance` in this case),
+- discover appropriate evaluators via Scorable MCP (`Conciseness` and `Relevance` in this case),
 - execute them and
 - provide a higher quality explanation based on the evaluator feedback:
 
@@ -140,10 +140,10 @@ It can then automatically evaluate the second attempt again to make sure the imp
 <summary style="font-size: 1.3em;"><b>2. Use the MCP reference client directly from code</b></summary><br>
 
 ```python
-from root_mcp_server.client import RootSignalsMCPClient
+from scorable_mcp.client import ScorableMCPClient
 
 async def main():
-    mcp_client = RootSignalsMCPClient()
+    mcp_client = ScorableMCPClient()
     
     try:
         await mcp_client.connect()
@@ -219,7 +219,7 @@ user:
 """
 ```
 
-You can measure by simply asking Cursor Agent: `Evaluate the summarizer prompt in terms of clarity and precision. use Root Signals`. You will get the scores and justifications in Cursor:
+You can measure by simply asking Cursor Agent: `Evaluate the summarizer prompt in terms of clarity and precision. use Scorable`. You will get the scores and justifications in Cursor:
 
 <h1 align="center">
   <img width="750" alt="Prompt evaluation use case example image 1" src="https://github.com/user-attachments/assets/ac14eb51-000a-4a68-b9c4-c8322ac8013a" loading="lazy">
@@ -236,9 +236,9 @@ Minimal steps include:
 
 1. `uv sync --extra dev`
 2. `pre-commit install`
-3. Add your code and your tests to `src/root_mcp_server/tests/`
+3. Add your code and your tests to `src/scorable_mcp/tests/`
 4. `docker compose up --build`
-5. `ROOT_SIGNALS_API_KEY=<something> uv run pytest .` - all should pass
+5. `SCORABLE_API_KEY=<something> uv run pytest .` - all should pass
 6. `ruff format . && ruff check --fix`
 
 ## Limitations
@@ -253,5 +253,5 @@ Current implementation does *not* include backoff and retry mechanisms for API c
 
 **Bundled MCP client is for reference only**
 
-This repo includes a `root_mcp_server.client.RootSignalsMCPClient` for reference with no support guarantees, unlike the server.
+This repo includes a `scorable_mcp.client.ScorableMCPClient` for reference with no support guarantees, unlike the server.
 We recommend your own or any of the official [MCP clients](https://modelcontextprotocol.io/clients) for production use.

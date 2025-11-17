@@ -1,38 +1,38 @@
-"""Integration tests for the RootSignals MCP Server using SSE transport."""
+"""Integration tests for the Scorable MCP Server using SSE transport."""
 
 import logging
 from typing import Any
 
 import pytest
 
-from root_signals_mcp.client import RootSignalsMCPClient
-from root_signals_mcp.evaluator import EvaluatorService
-from root_signals_mcp.schema import (
+from scorable_mcp.client import ScorableMCPClient
+from scorable_mcp.evaluator import EvaluatorService
+from scorable_mcp.schema import (
     EvaluationRequest,
     EvaluationRequestByName,
     EvaluationResponse,
     EvaluatorInfo,
     EvaluatorsListResponse,
 )
-from root_signals_mcp.settings import settings
+from scorable_mcp.settings import settings
 
 pytestmark = [
     pytest.mark.skipif(
-        settings.root_signals_api_key.get_secret_value() == "",
-        reason="ROOT_SIGNALS_API_KEY environment variable not set or empty",
+        settings.scorable_api_key.get_secret_value() == "",
+        reason="SCORABLE_API_KEY environment variable not set or empty",
     ),
     pytest.mark.integration,
     pytest.mark.asyncio(loop_scope="session"),
 ]
 
-logger = logging.getLogger("root_mcp_server_tests")
+logger = logging.getLogger("scorable_mcp_tests")
 
 
 @pytest.mark.asyncio
 async def test_list_tools(compose_up_mcp_server: Any) -> None:
     """Test listing tools via SSE transport."""
     logger.info("Connecting to MCP server")
-    client: RootSignalsMCPClient = RootSignalsMCPClient()
+    client: ScorableMCPClient = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -58,7 +58,7 @@ async def test_list_tools(compose_up_mcp_server: Any) -> None:
 async def test_list_evaluators(compose_up_mcp_server: Any) -> None:
     """Test listing evaluators via SSE transport."""
     logger.info("Connecting to MCP server")
-    client: RootSignalsMCPClient = RootSignalsMCPClient()
+    client: ScorableMCPClient = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -75,7 +75,7 @@ async def test_list_evaluators(compose_up_mcp_server: Any) -> None:
 async def test_list_judges(compose_up_mcp_server: Any) -> None:
     """Test listing judges via SSE transport."""
     logger.info("Connecting to MCP server")
-    client: RootSignalsMCPClient = RootSignalsMCPClient()
+    client: ScorableMCPClient = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -92,7 +92,7 @@ async def test_list_judges(compose_up_mcp_server: Any) -> None:
 async def test_run_evaluation(compose_up_mcp_server: Any) -> None:
     """Test running a standard evaluation via SSE transport."""
     logger.info("Connecting to MCP server")
-    client: RootSignalsMCPClient = RootSignalsMCPClient()
+    client: ScorableMCPClient = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -125,7 +125,7 @@ async def test_run_evaluation(compose_up_mcp_server: Any) -> None:
 async def test_run_rag_evaluation(compose_up_mcp_server: Any) -> None:
     """Test running a RAG evaluation via SSE transport."""
     logger.info("Connecting to MCP server")
-    client: RootSignalsMCPClient = RootSignalsMCPClient()
+    client: ScorableMCPClient = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -327,7 +327,7 @@ async def test_evaluator_service_integration__rag_evaluation_by_name(
 async def test_run_coding_policy_adherence(compose_up_mcp_server: Any) -> None:
     """Test running a coding policy adherence evaluation via SSE transport."""
     logger.info("Connecting to MCP server")
-    client: RootSignalsMCPClient = RootSignalsMCPClient()
+    client: ScorableMCPClient = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -367,7 +367,7 @@ async def test_run_coding_policy_adherence(compose_up_mcp_server: Any) -> None:
 async def test_run_judge(compose_up_mcp_server: Any) -> None:
     """Test running a judge via SSE transport."""
     logger.info("Connecting to MCP server")
-    client: RootSignalsMCPClient = RootSignalsMCPClient()
+    client: ScorableMCPClient = ScorableMCPClient()
 
     try:
         await client.connect()

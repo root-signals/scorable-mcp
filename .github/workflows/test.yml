@@ -35,10 +35,10 @@ jobs:
 
       - name: Create .env file from secrets
         run: |
-          echo "ROOT_SIGNALS_API_KEY=${{ secrets.ROOT_SIGNALS_API_KEY }}" > .env
+          echo "SCORABLE_API_KEY=${{ secrets.SCORABLE_API_KEY }}" > .env
           echo "Created .env file with API key"
           # Also set it as environment variable for pytest
-          echo "ROOT_SIGNALS_API_KEY=${{ secrets.ROOT_SIGNALS_API_KEY }}" >> $GITHUB_ENV
+          echo "SCORABLE_API_KEY=${{ secrets.SCORABLE_API_KEY }}" >> $GITHUB_ENV
       
       # GitHub-hosted runners already have Docker Compose installed
       - name: Check Docker Compose version
@@ -55,8 +55,8 @@ jobs:
 
       - name: Check API key is set
         run: |
-          if [ -z "$ROOT_SIGNALS_API_KEY" ]; then
-            echo "ERROR: ROOT_SIGNALS_API_KEY is not set. Tests will be skipped."
+          if [ -z "$SCORABLE_API_KEY" ]; then
+            echo "ERROR: SCORABLE_API_KEY is not set. Tests will be skipped."
             exit 1
           else
             echo "API key is set. Proceeding with tests."
@@ -65,7 +65,7 @@ jobs:
       - name: Run integration tests with coverage
         run: |
           uv run python -m pytest -v \
-            --cov=root_signals_mcp \
+            --cov=scorable_mcp \
             --cov-report=xml:integration-coverage.xml \
             --cov-report=term
 

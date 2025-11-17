@@ -1,1 +1,1 @@
-"""Root package for RootSignals MCP Server."""
+"""Root package for Scorable MCP Server."""

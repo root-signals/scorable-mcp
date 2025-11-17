@@ -1,4 +1,4 @@
-"""Integration tests for the RootSignals MCP Server using stdio transport."""
+"""Integration tests for the Scorable MCP Server using stdio transport."""
 
 from __future__ import annotations
 
@@ -13,25 +13,25 @@ from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.types import CallToolResult
 
-from root_signals_mcp.settings import settings
+from scorable_mcp.settings import settings
 
 pytestmark = [
     pytest.mark.skipif(
-        settings.root_signals_api_key.get_secret_value() == "",
-        reason="ROOT_SIGNALS_API_KEY environment variable not set or empty",
+        settings.scorable_api_key.get_secret_value() == "",
+        reason="SCORABLE_API_KEY environment variable not set or empty",
     ),
     pytest.mark.integration,
     pytest.mark.asyncio,
 ]
 
-logger = logging.getLogger("root_mcp_server_tests")
+logger = logging.getLogger("scorable_mcp_tests")
 PROJECT_ROOT = Path(__file__).parents[4]
 
 
 @pytest.mark.asyncio
 async def test_direct_core_list_tools() -> None:
     """Test listing tools directly from the RootMCPServerCore."""
-    from root_signals_mcp.core import RootMCPServerCore
+    from scorable_mcp.core import RootMCPServerCore
 
     logger.info("Testing direct core tool listing")
     core = RootMCPServerCore()
@@ -53,7 +53,7 @@ async def test_direct_core_list_tools() -> None:
 @pytest.mark.asyncio
 async def test_direct_core_list_evaluators() -> None:
     """Test calling the list_evaluators tool directly from the RootMCPServerCore."""
-    from root_signals_mcp.core import RootMCPServerCore
+    from scorable_mcp.core import RootMCPServerCore
 
     logger.info("Testing direct core list_evaluators")
     core = RootMCPServerCore()
@@ -80,7 +80,7 @@ async def test_direct_core_list_evaluators() -> None:
 @pytest.mark.asyncio
 async def test_direct_core_list_judges() -> None:
     """Test calling the list_judges tool directly from the RootMCPServerCore."""
-    from root_signals_mcp.core import RootMCPServerCore
+    from scorable_mcp.core import RootMCPServerCore
 
     logger.info("Testing direct core list_judges")
     core = RootMCPServerCore()
@@ -107,11 +107,11 @@ async def test_stdio_client_list_tools() -> None:
     """
 
     server_env = os.environ.copy()
-    server_env["ROOT_SIGNALS_API_KEY"] = settings.root_signals_api_key.get_secret_value()
+    server_env["SCORABLE_API_KEY"] = settings.scorable_api_key.get_secret_value()
 
     server_params = StdioServerParameters(  # type: ignore[call-arg]
         command=sys.executable,
-        args=["-m", "root_signals_mcp.stdio_server"],
+        args=["-m", "scorable_mcp.stdio_server"],
         env=server_env,
     )
 
@@ -139,11 +139,11 @@ async def test_stdio_client_run_evaluation_by_name() -> None:
     """Test running an evaluation by name using the stdio client."""
 
     server_env = os.environ.copy()
-    server_env["ROOT_SIGNALS_API_KEY"] = settings.root_signals_api_key.get_secret_value()
+    server_env["SCORABLE_API_KEY"] = settings.scorable_api_key.get_secret_value()
 
     server_params = StdioServerParameters(  # type: ignore[call-arg]
         command=sys.executable,
-        args=["-m", "root_signals_mcp.stdio_server"],
+        args=["-m", "scorable_mcp.stdio_server"],
         env=server_env,
     )
 
@@ -204,11 +204,11 @@ async def test_stdio_client_run_judge() -> None:
     """Test running a judge using the stdio client."""
 
     server_env = os.environ.copy()
-    server_env["ROOT_SIGNALS_API_KEY"] = settings.root_signals_api_key.get_secret_value()
+    server_env["SCORABLE_API_KEY"] = settings.scorable_api_key.get_secret_value()
 
     server_params = StdioServerParameters(  # type: ignore[call-arg]
         command=sys.executable,
-        args=["-m", "root_signals_mcp.stdio_server"],
+        args=["-m", "scorable_mcp.stdio_server"],
         env=server_env,
     )
 
@@ -276,11 +276,11 @@ async def test_stdio_client_call_tool_list_evaluators() -> None:
     """Verify that calling *list_evaluators* via the stdio client returns JSON."""
 
     server_env = os.environ.copy()
-    server_env["ROOT_SIGNALS_API_KEY"] = settings.root_signals_api_key.get_secret_value()
+    server_env["SCORABLE_API_KEY"] = settings.scorable_api_key.get_secret_value()
 
     server_params = StdioServerParameters(  # type: ignore[call-arg]
         command=sys.executable,
-        args=["-m", "root_signals_mcp.stdio_server"],
+        args=["-m", "scorable_mcp.stdio_server"],
         env=server_env,
     )
 
@@ -300,11 +300,11 @@ async def test_stdio_client_call_tool_list_judges() -> None:
     """Verify that calling *list_judges* via the stdio client returns JSON."""
 
     server_env = os.environ.copy()
-    server_env["ROOT_SIGNALS_API_KEY"] = settings.root_signals_api_key.get_secret_value()
+    server_env["SCORABLE_API_KEY"] = settings.scorable_api_key.get_secret_value()
 
     server_params = StdioServerParameters(  # type: ignore[call-arg]
         command=sys.executable,
-        args=["-m", "root_signals_mcp.stdio_server"],
+        args=["-m", "scorable_mcp.stdio_server"],
         env=server_env,
     )
 

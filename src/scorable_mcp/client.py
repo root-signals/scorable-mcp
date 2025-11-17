@@ -1,4 +1,4 @@
-"""MCP client example implementation for connecting to the RootSignals MCP Server via SSE.
+"""MCP client example implementation for connecting to the Scorable MCP Server via SSE.
 
 This module provides a client to interact with the MCP server using the
 Server-Sent Events (SSE) transport
@@ -14,13 +14,13 @@ from typing import Any, TypeVar
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 
-logger = logging.getLogger("root_signals_mcp.client")
+logger = logging.getLogger("scorable_mcp.client")
 
 T = TypeVar("T")
 
 
-class RootSignalsMCPClient:
-    """Client for interacting with the RootSignals MCP Server via SSE transport."""
+class ScorableMCPClient:
+    """Client for interacting with the Scorable MCP Server via SSE transport."""
 
     def __init__(self, server_url: str = "http://localhost:9090/sse"):
         """Initialize the MCP client.
@@ -111,7 +111,7 @@ class RootSignalsMCPClient:
         return json.loads(text_content.text)  # type: ignore
 
     async def list_evaluators(self) -> list[dict[str, Any]]:
-        """List available evaluators from the RootSignals API.
+        """List available evaluators from the Scorable API.
 
         Returns:
             List of available evaluators
@@ -127,7 +127,7 @@ class RootSignalsMCPClient:
         contexts: list[str] | None = None,
         expected_output: str | None = None,
     ) -> dict[str, Any]:
-        """Run a standard evaluation using a RootSignals evaluator by ID.
+        """Run a standard evaluation using a Scorable evaluator by ID.
 
         Args:
             evaluator_id: ID of the evaluator to use
@@ -157,7 +157,7 @@ class RootSignalsMCPClient:
         contexts: list[str] | None = None,
         expected_output: str | None = None,
     ) -> dict[str, Any]:
-        """Run a standard evaluation using a RootSignals evaluator by name.
+        """Run a standard evaluation using a Scorable evaluator by name.
 
         Args:
             evaluator_name: Name of the evaluator to use
@@ -182,7 +182,7 @@ class RootSignalsMCPClient:
     async def run_rag_evaluation_by_name(
         self, evaluator_name: str, request: str, response: str, contexts: list[str]
     ) -> dict[str, Any]:
-        """Run a RAG evaluation with contexts using a RootSignals evaluator by name.
+        """Run a RAG evaluation with contexts using a Scorable evaluator by name.
 
         Args:
             evaluator_name: Name of the evaluator to use
@@ -205,7 +205,7 @@ class RootSignalsMCPClient:
     async def run_coding_policy_adherence(
         self, policy_documents: list[str], code: str
     ) -> dict[str, Any]:
-        """Run a coding policy adherence evaluation using a RootSignals evaluator.
+        """Run a coding policy adherence evaluation using a Scorable evaluator.
         Args:
             policy_documents: List of policy documents, such as the contents of the cursor/rules file which describe the coding policy
             code: The code to evaluate
@@ -221,7 +221,7 @@ class RootSignalsMCPClient:
         return await self.call_tool("run_coding_policy_adherence", arguments)
 
     async def list_judges(self) -> list[dict[str, Any]]:
-        """List available judges from the RootSignals API.
+        """List available judges from the Scorable API.
 
         Returns:
             List of available judges

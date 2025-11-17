@@ -1,6 +1,6 @@
-"""RootSignals HTTP client module.
+"""Scorable HTTP client module.
 
-This module provides a simple httpx-based client for the RootSignals API,
+This module provides a simple httpx-based client for the Scorable API,
 replacing the official SDK with a minimal implementation for our specific needs.
 """
 
@@ -10,23 +10,23 @@ from typing import Any, Literal, cast
 
 import httpx
 
-from root_signals_mcp.schema import (
+from scorable_mcp.schema import (
     EvaluationResponse,
     EvaluatorInfo,
     JudgeInfo,
     RunJudgeRequest,
     RunJudgeResponse,
 )
-from root_signals_mcp.settings import settings
+from scorable_mcp.settings import settings
 
-logger = logging.getLogger("root_mcp_server.root_client")
+logger = logging.getLogger("scorable_mcp.root_client")
 
 
-class RootSignalsAPIError(Exception):
-    """Exception raised for RootSignals API errors."""
+class ScorableAPIError(Exception):
+    """Exception raised for Scorable API errors."""
 
     def __init__(self, status_code: int, detail: str):
-        """Initialize RootSignalsAPIError.
+        """Initialize ScorableAPIError.
 
         Args:
             status_code: HTTP status code of the error
@@ -34,7 +34,7 @@ class RootSignalsAPIError(Exception):
         """
         self.status_code = status_code
         self.detail = detail
-        super().__init__(f"RootSignals API error (HTTP {status_code}): {detail}")
+        super().__init__(f"Scorable API error (HTTP {status_code}): {detail}")
 
 
 class ResponseValidationError(Exception):
@@ -51,19 +51,19 @@ class ResponseValidationError(Exception):
         super().__init__(f"Response validation error: {message}")
 
 
-class RootSignalsRepositoryBase:
-    """Base class for RootSignals API clients."""
+class ScorableRepositoryBase:
+    """Base class for Scorable API clients."""
 
     def __init__(
         self,
-        api_key: str = settings.root_signals_api_key.get_secret_value(),
-        base_url: str = settings.root_signals_api_url,
+        api_key: str = settings.scorable_api_key.get_secret_value(),
+        base_url: str = settings.scorable_api_url,
     ):
-        """Initialize the HTTP client for RootSignals API.
+        """Initialize the HTTP client for Scorable API.
 
         Args:
-            api_key: RootSignals API key
-            base_url: Base URL for the RootSignals API
+            api_key: Scorable API key
+            base_url: Base URL for the Scorable API
         """
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
@@ -72,11 +72,11 @@ class RootSignalsRepositoryBase:
             "Authorization": f"Api-Key {api_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": f"root-signals-mcp/{settings.version}",
+            "User-Agent": f"scorable-mcp/{settings.version}",
         }
 
         logger.debug(
-            f"Initialized RootSignals API client with User-Agent: {self.headers['User-Agent']}"
+            f"Initialized Scorable API client with User-Agent: {self.headers['User-Agent']}"
         )
 
     async def _make_request(
@@ -86,7 +86,7 @@ class RootSignalsRepositoryBase:
         params: dict[str, Any] | None = None,
         json_data: dict[str, Any] | None = None,
     ) -> Any:
-        """Make an HTTP request to the RootSignals API.
+        """Make an HTTP request to the Scorable API.
 
         Args:
             method: HTTP method (GET, POST, etc.)
@@ -98,7 +98,7 @@ class RootSignalsRepositoryBase:
             Response data as a dictionary or list
 
         Raises:
-            RootSignalsAPIError: If the API returns an error
+            ScorableAPIError: If the API returns an error
         """
         url = f"{self.base_url}/{path.lstrip('/')}"
 
@@ -118,7 +118,7 @@ class RootSignalsRepositoryBase:
                     params=params,
                     json=json_data,
                     headers=self.headers,
-                    timeout=settings.root_signals_api_timeout,
+                    timeout=settings.scorable_api_timeout,
                 )
 
                 logger.debug(f"Response status: {response.status_code}")
@@ -133,7 +133,7 @@ class RootSignalsRepositoryBase:
                         error_message = response.text or f"HTTP {response.status_code}"
 
                     logger.error(f"API error response: {error_message}")
-                    raise RootSignalsAPIError(response.status_code, error_message)
+                    raise ScorableAPIError(response.status_code, error_message)
 
                 if response.status_code == 204:  # noqa: PLR2004
                     return {}
@@ -145,7 +145,7 @@ class RootSignalsRepositoryBase:
 
             except httpx.RequestError as e:
                 logger.error(f"Request error: {str(e)}")
-                raise RootSignalsAPIError(0, f"Connection error: {str(e)}") from e
+                raise ScorableAPIError(0, f"Connection error: {str(e)}") from e
 
     async def _fetch_paginated_results(  # noqa: PLR0915, PLR0912
         self,
@@ -212,8 +212,8 @@ class RootSignalsRepositoryBase:
         return items_raw
 
 
-class RootSignalsEvaluatorRepository(RootSignalsRepositoryBase):
-    """HTTP client for the RootSignals Evaluators API."""
+class ScorableEvaluatorRepository(ScorableRepositoryBase):
+    """HTTP client for the Scorable Evaluators API."""
 
     async def list_evaluators(self, max_count: int | None = None) -> list[EvaluatorInfo]:
         """List all available evaluators with pagination support.
@@ -389,8 +389,8 @@ class RootSignalsEvaluatorRepository(RootSignalsRepositoryBase):
             ) from e
 
 
-class RootSignalsJudgeRepository(RootSignalsRepositoryBase):
-    """HTTP client for the RootSignals Judges API."""
+class ScorableJudgeRepository(ScorableRepositoryBase):
+    """HTTP client for the Scorable Judges API."""
 
     async def list_judges(self, max_count: int | None = None) -> list[JudgeInfo]:
         """List all available judges with pagination support.
@@ -467,7 +467,7 @@ class RootSignalsJudgeRepository(RootSignalsRepositoryBase):
 
         Raises:
             ResponseValidationError: If response cannot be parsed
-            RootSignalsAPIError: If API returns an error
+            ScorableAPIError: If API returns an error
         """
         logger.info(f"Running judge {run_judge_request.judge_id}")
         logger.debug(f"Judge request: {run_judge_request.request[:100]}...")

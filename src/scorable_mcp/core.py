@@ -1,4 +1,4 @@
-"""Transport-agnostic core implementation of the RootSignals MCP server.
+"""Transport-agnostic core implementation of the Scorable MCP server.
 Each transport layer only needs to:
 
 1. instantiate `RootMCPServerCore`
@@ -15,10 +15,10 @@ from typing import Any
 from mcp.server.lowlevel import Server
 from mcp.types import TextContent, Tool
 
-from root_signals_mcp import tools as tool_catalogue
-from root_signals_mcp.evaluator import EvaluatorService
-from root_signals_mcp.judge import JudgeService
-from root_signals_mcp.schema import (
+from scorable_mcp import tools as tool_catalogue
+from scorable_mcp.evaluator import EvaluatorService
+from scorable_mcp.judge import JudgeService
+from scorable_mcp.schema import (
     CodingPolicyAdherenceEvaluationRequest,
     EvaluationRequest,
     EvaluationRequestByName,
@@ -31,9 +31,9 @@ from root_signals_mcp.schema import (
     RunJudgeResponse,
     UnknownToolRequest,
 )
-from root_signals_mcp.settings import settings
+from scorable_mcp.settings import settings
 
-logger = logging.getLogger("root_signals_mcp.core")
+logger = logging.getLogger("scorable_mcp.core")
 
 
 _Handler = Callable[[Any], Awaitable[Any]]
@@ -43,7 +43,7 @@ class RootMCPServerCore:  # noqa: D101
     def __init__(self) -> None:
         self.evaluator_service = EvaluatorService()
         self.judge_service = JudgeService()
-        self.app = Server("RootSignals Evaluators")
+        self.app = Server("Scorable Evaluators")
 
         @self.app.list_tools()
         async def _list_tools() -> list[Tool]:

@@ -1,5 +1,5 @@
 FROM python:3.13-slim
-LABEL maintainer="hello@rootsignals.ai"
+LABEL maintainer="hello@scorable.ai"
 
 WORKDIR /app
 
@@ -23,4 +23,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f -I http://localhost:9090/health || exit 1
 
 # Run the SSE server directly
-CMD ["uv", "run", "python", "-m", "src.root_signals_mcp.sse_server"]
+CMD ["uv", "run", "python", "-m", "src.scorable_mcp.sse_server"]

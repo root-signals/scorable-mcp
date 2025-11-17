@@ -2,7 +2,7 @@
 
 import re
 
-from root_signals_mcp.settings import get_package_version, settings
+from scorable_mcp.settings import get_package_version, settings
 
 
 def test_version_in_settings() -> None:
