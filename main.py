@@ -1,6 +1,6 @@
-"""Main entry point for RootSignals MCP Server."""
+"""Main entry point for Scorable MCP Server."""
 
-from root_signals_mcp.sse_server import run_server
+from scorable_mcp.sse_server import run_server
 
 if __name__ == "__main__":
     run_server()

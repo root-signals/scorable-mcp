@@ -1,4 +1,4 @@
-"""Tests for the RootSignals HTTP client."""
+"""Tests for the Scorable HTTP client."""
 
 import logging
 from unittest.mock import patch
@@ -6,35 +6,35 @@ from unittest.mock import patch
 import httpx
 import pytest
 
-from root_signals_mcp.root_api_client import (
+from scorable_mcp.root_api_client import (
     ResponseValidationError,
-    RootSignalsAPIError,
-    RootSignalsEvaluatorRepository,
-    RootSignalsJudgeRepository,
+    ScorableAPIError,
+    ScorableEvaluatorRepository,
+    ScorableJudgeRepository,
 )
-from root_signals_mcp.schema import EvaluatorInfo, RunJudgeRequest
-from root_signals_mcp.settings import settings
+from scorable_mcp.schema import EvaluatorInfo, RunJudgeRequest
+from scorable_mcp.settings import settings
 
 pytestmark = [
     pytest.mark.skipif(
-        settings.root_signals_api_key.get_secret_value() == "",
-        reason="ROOT_SIGNALS_API_KEY environment variable not set or empty",
+        settings.scorable_api_key.get_secret_value() == "",
+        reason="SCORABLE_API_KEY environment variable not set or empty",
     ),
     pytest.mark.integration,
     pytest.mark.asyncio(loop_scope="session"),
 ]
 
-logger = logging.getLogger("root_mcp_server_tests")
+logger = logging.getLogger("scorable_mcp_tests")
 
 
 async def test_user_agent_header() -> None:
     """Test that the User-Agent header is properly set."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
     assert "User-Agent" in client.headers, "User-Agent header is missing"
 
     user_agent = client.headers["User-Agent"]
-    assert user_agent.startswith("root-signals-mcp/"), f"Unexpected User-Agent format: {user_agent}"
+    assert user_agent.startswith("scorable-mcp/"), f"Unexpected User-Agent format: {user_agent}"
 
     version = user_agent.split("/")[1]
     assert version, "Version part is missing in User-Agent"
@@ -48,7 +48,7 @@ async def test_user_agent_header() -> None:
 @pytest.mark.asyncio
 async def test_list_evaluators() -> None:
     """Test listing evaluators from the API."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
     evaluators = await client.list_evaluators()
 
@@ -70,7 +70,7 @@ async def test_list_evaluators() -> None:
 @pytest.mark.asyncio
 async def test_list_evaluators_with_count() -> None:
     """Test listing evaluators with a specific count limit."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
     max_count = 5
     evaluators = await client.list_evaluators(max_count=max_count)
@@ -93,7 +93,7 @@ async def test_list_evaluators_with_count() -> None:
 @pytest.mark.asyncio
 async def test_pagination_handling() -> None:
     """Test that pagination works correctly when more evaluators are available."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
     small_limit = 2
     evaluators = await client.list_evaluators(max_count=small_limit)
@@ -105,7 +105,7 @@ async def test_pagination_handling() -> None:
 @pytest.mark.asyncio
 async def test_run_evaluator() -> None:
     """Test running an evaluation with the API client."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
     evaluators = await client.list_evaluators()
 
@@ -131,7 +131,7 @@ async def test_run_evaluator() -> None:
 @pytest.mark.asyncio
 async def test_run_evaluator_with_contexts() -> None:
     """Test running a RAG evaluation with contexts."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
     evaluators = await client.list_evaluators()
 
@@ -163,9 +163,9 @@ async def test_run_evaluator_with_contexts() -> None:
 @pytest.mark.asyncio
 async def test_evaluator_not_found() -> None:
     """Test error handling when evaluator is not found."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
-    with pytest.raises(RootSignalsAPIError) as excinfo:
+    with pytest.raises(ScorableAPIError) as excinfo:
         await client.run_evaluator(
             evaluator_id="nonexistent-evaluator-id",
             request="Test request",
@@ -179,7 +179,7 @@ async def test_evaluator_not_found() -> None:
 @pytest.mark.asyncio
 async def test_run_evaluator_with_expected_output() -> None:
     """Test running an evaluation with expected output."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
     evaluators = await client.list_evaluators()
     eval_with_expected = next(
@@ -202,7 +202,7 @@ async def test_run_evaluator_with_expected_output() -> None:
         assert result.evaluator_name, "Missing evaluator name in result"
         assert isinstance(result.score, float), "Score is not a float"
         logger.info(f"Evaluation with expected output - score: {result.score}")
-    except RootSignalsAPIError as e:
+    except ScorableAPIError as e:
         logger.warning(f"Could not run evaluator with expected output: {e}")
         assert e.status_code in (400, 422), f"Unexpected error code: {e.status_code}"
 
@@ -210,7 +210,7 @@ async def test_run_evaluator_with_expected_output() -> None:
 @pytest.mark.asyncio
 async def test_run_evaluator_by_name() -> None:
     """Test running an evaluation using the evaluator name instead of ID."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
     evaluators = await client.list_evaluators()
     assert evaluators, "No evaluators returned"
@@ -238,7 +238,7 @@ async def test_run_evaluator_by_name() -> None:
 @pytest.mark.asyncio
 async def test_run_rag_evaluator_by_name() -> None:
     """Test running a RAG evaluation using the evaluator name instead of ID."""
-    client = RootSignalsEvaluatorRepository()
+    client = ScorableEvaluatorRepository()
 
     evaluators = await client.list_evaluators()
     rag_evaluator = next((e for e in evaluators if e.requires_contexts), None)
@@ -270,8 +270,8 @@ async def test_run_rag_evaluator_by_name() -> None:
 async def test_api_client_connection_error() -> None:
     """Test error handling when connection fails."""
     with patch("httpx.AsyncClient.request", side_effect=httpx.ConnectError("Connection failed")):
-        client = RootSignalsEvaluatorRepository()
-        with pytest.raises(RootSignalsAPIError) as excinfo:
+        client = ScorableEvaluatorRepository()
+        with pytest.raises(ScorableAPIError) as excinfo:
             await client.list_evaluators()
 
         assert excinfo.value.status_code == 0, "Expected status code 0 for connection error"
@@ -283,8 +283,8 @@ async def test_api_client_connection_error() -> None:
 @pytest.mark.asyncio
 async def test_api_response_validation_error() -> None:
     """Test validation error handling with invalid responses."""
-    with patch.object(RootSignalsEvaluatorRepository, "_make_request") as mock_request:
-        client = RootSignalsEvaluatorRepository()
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
+        client = ScorableEvaluatorRepository()
 
         # Case 1: Empty response when results field expected
         mock_request.return_value = {}
@@ -319,8 +319,8 @@ async def test_api_response_validation_error() -> None:
 @pytest.mark.asyncio
 async def test_evaluator_missing_fields() -> None:
     """Test handling of evaluators with missing required fields."""
-    with patch.object(RootSignalsEvaluatorRepository, "_make_request") as mock_request:
-        client = RootSignalsEvaluatorRepository()
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
+        client = ScorableEvaluatorRepository()
 
         mock_request.return_value = {
             "results": [
@@ -367,7 +367,7 @@ async def test_evaluator_missing_fields() -> None:
 @pytest.mark.asyncio
 async def test_root_client_schema_compatibility__detects_api_schema_changes() -> None:
     """Test that our schema models detect changes in the API response format."""
-    with patch.object(RootSignalsEvaluatorRepository, "_make_request") as mock_request:
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
         # Case 1: Missing required field (evaluator_name)
         mock_request.return_value = {
             "result": {
@@ -376,7 +376,7 @@ async def test_root_client_schema_compatibility__detects_api_schema_changes() ->
             }
         }
 
-        client = RootSignalsEvaluatorRepository()
+        client = ScorableEvaluatorRepository()
         with pytest.raises(ResponseValidationError) as excinfo:
             await client.run_evaluator(
                 evaluator_id="test-id", request="Test request", response="Test response"
@@ -424,7 +424,7 @@ async def test_root_client_schema_compatibility__detects_api_schema_changes() ->
 @pytest.mark.asyncio
 async def test_root_client_run_evaluator__handles_unexpected_response_fields() -> None:
     """Test handling of extra fields in API response."""
-    with patch.object(RootSignalsEvaluatorRepository, "_make_request") as mock_request:
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
         # Include extra fields that aren't in our schema
         mock_request.return_value = {
             "result": {
@@ -435,7 +435,7 @@ async def test_root_client_run_evaluator__handles_unexpected_response_fields() -
             }
         }
 
-        client = RootSignalsEvaluatorRepository()
+        client = ScorableEvaluatorRepository()
         result = await client.run_evaluator(evaluator_id="test-id", request="Test", response="Test")
 
         assert result.evaluator_name == "Test", "Required field should be correctly parsed"
@@ -449,7 +449,7 @@ async def test_root_client_run_evaluator__handles_unexpected_response_fields() -
 @pytest.mark.asyncio
 async def test_list_judges() -> None:
     """Test listing judges from the API."""
-    client = RootSignalsJudgeRepository()
+    client = ScorableJudgeRepository()
 
     judges = await client.list_judges()
 
@@ -468,7 +468,7 @@ async def test_list_judges() -> None:
 @pytest.mark.asyncio
 async def test_list_judges_with_count() -> None:
     """Test listing judges with a specific count limit."""
-    client = RootSignalsJudgeRepository()
+    client = ScorableJudgeRepository()
 
     max_count = 5
     judges = await client.list_judges(max_count=max_count)
@@ -489,7 +489,7 @@ async def test_list_judges_with_count() -> None:
 @pytest.mark.asyncio
 async def test_root_client_list_judges__handles_unexpected_response_fields() -> None:
     """Test handling of extra fields in judge API response."""
-    with patch.object(RootSignalsJudgeRepository, "_make_request") as mock_request:
+    with patch.object(ScorableJudgeRepository, "_make_request") as mock_request:
         # Include extra fields that aren't in our schema
         mock_request.return_value = {
             "results": [
@@ -503,7 +503,7 @@ async def test_root_client_list_judges__handles_unexpected_response_fields() -> 
             ]
         }
 
-        client = RootSignalsJudgeRepository()
+        client = ScorableJudgeRepository()
         judges = await client.list_judges()
 
         assert len(judges) == 1, "Should have one judge in the result"
@@ -518,7 +518,7 @@ async def test_root_client_list_judges__handles_unexpected_response_fields() -> 
 @pytest.mark.asyncio
 async def test_run_judge() -> None:
     """Test running a judge with the API client."""
-    client = RootSignalsJudgeRepository()
+    client = ScorableJudgeRepository()
 
     judges = await client.list_judges()
 

@@ -12,10 +12,10 @@ import pytest
 import pytest_asyncio
 from python_on_whales import Container, DockerClient
 
-from root_signals_mcp.sse_server import SSEMCPServer
+from scorable_mcp.sse_server import SSEMCPServer
 
 # Setup logging
-logger = logging.getLogger("root_mcp_server_tests")
+logger = logging.getLogger("scorable_mcp_tests")
 logger.setLevel(logging.DEBUG)
 log_handler = logging.StreamHandler()
 log_handler.setLevel(logging.DEBUG)

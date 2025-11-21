@@ -1,10 +1,10 @@
-"""Tool catalogue for the RootSignals MCP server."""
+"""Tool catalogue for the Scorable MCP server."""
 
 from __future__ import annotations
 
 from mcp.types import Tool
 
-from root_signals_mcp.schema import (
+from scorable_mcp.schema import (
     CodingPolicyAdherenceEvaluationRequest,
     EvaluationRequest,
     EvaluationRequestByName,
@@ -15,37 +15,37 @@ from root_signals_mcp.schema import (
 
 
 def get_tools() -> list[Tool]:
-    """Return the list of MCP *tools* supported by RootSignals."""
+    """Return the list of MCP *tools* supported by Scorable."""
 
     return [
         Tool(
             name="list_evaluators",
-            description="List all available evaluators from RootSignals",
+            description="List all available evaluators from Scorable",
             inputSchema=ListEvaluatorsRequest.model_json_schema(),
         ),
         Tool(
             name="run_evaluation",
-            description="Run a standard evaluation using a RootSignals evaluator by ID",
+            description="Run a standard evaluation using a Scorable evaluator by ID",
             inputSchema=EvaluationRequest.model_json_schema(),
         ),
         Tool(
             name="run_evaluation_by_name",
-            description="Run a standard evaluation using a RootSignals evaluator by name",
+            description="Run a standard evaluation using a Scorable evaluator by name",
             inputSchema=EvaluationRequestByName.model_json_schema(),
         ),
         Tool(
             name="run_coding_policy_adherence",
-            description="Evaluate code against repository coding policy documents using a dedicated RootSignals evaluator",
+            description="Evaluate code against repository coding policy documents using a dedicated Scorable evaluator",
             inputSchema=CodingPolicyAdherenceEvaluationRequest.model_json_schema(),
         ),
         Tool(
             name="list_judges",
-            description="List all available judges from RootSignals. Judge is a collection of evaluators forming LLM-as-a-judge.",
+            description="List all available judges from Scorable. Judge is a collection of evaluators forming LLM-as-a-judge.",
             inputSchema=ListJudgesRequest.model_json_schema(),
         ),
         Tool(
             name="run_judge",
-            description="Run a judge using a RootSignals judge by ID",
+            description="Run a judge using a Scorable judge by ID",
             inputSchema=RunJudgeRequest.model_json_schema(),
         ),
     ]

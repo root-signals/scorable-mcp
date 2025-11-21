@@ -3,12 +3,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "root-signals-mcp"
+name = "scorable-mcp"
 version = "20250429-1"
-description = "MCP server for RootSignals evaluators"
+description = "MCP server for Scorable evaluators"
 readme = "README.md"
 authors = [
-    {name = "RootSignals Team", email = "info@rootsignals.ai"}
+    {name = "Scorable Team", email = "info@scorable.ai"}
 ]
 requires-python = ">=3.13"
 license = {text = "MIT"}
@@ -47,17 +47,17 @@ dev = [
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "session"
-testpaths = ["src/root_signals_mcp/test"]
+testpaths = ["src/scorable_mcp/test"]
 norecursedirs = ["references"]
 markers = [
     "integration: marks tests as integration tests requiring external dependencies"
 ]
 
 [tool.coverage.run]
-source = ["src/root_signals_mcp"]
+source = ["src/scorable_mcp"]
 omit = [
-    "src/root_signals_mcp/test/*",
-    "src/root_signals_mcp/*/test/*",
+    "src/scorable_mcp/test/*",
+    "src/scorable_mcp/*/test/*",
     "*/__pycache__/*",
 ]
 
@@ -72,8 +72,8 @@ exclude_lines = [
 ]
 
 [project.scripts]
-sse = "root_signals_mcp.sse_server:main"
-stdio = "root_signals_mcp.stdio_server:main"
+sse = "scorable_mcp.sse_server:main"
+stdio = "scorable_mcp.stdio_server:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -101,4 +101,4 @@ select = ["E", "F", "I", "B", "C4", "N", "UP", "PL"]
 ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
-"src/root_signals_mcp/test/**/*.py" = ["N", "B", "PLR2004", "PLR0912", "PLR0915"]
+"src/scorable_mcp/test/**/*.py" = ["N", "B", "PLR2004", "PLR0912", "PLR0915"]

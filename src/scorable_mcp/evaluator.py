@@ -1,35 +1,35 @@
-"""RootSignals evaluator service module.
+"""Scorable evaluator service module.
 
-This module handles the integration with RootSignals evaluators.
+This module handles the integration with Scorable evaluators.
 """
 
 import logging
 
-from root_signals_mcp.root_api_client import (
+from scorable_mcp.root_api_client import (
     ResponseValidationError,
-    RootSignalsAPIError,
-    RootSignalsEvaluatorRepository,
+    ScorableAPIError,
+    ScorableEvaluatorRepository,
 )
-from root_signals_mcp.schema import (
+from scorable_mcp.schema import (
     EvaluationRequest,
     EvaluationRequestByName,
     EvaluationResponse,
     EvaluatorInfo,
     EvaluatorsListResponse,
 )
-from root_signals_mcp.settings import settings
+from scorable_mcp.settings import settings
 
-logger = logging.getLogger("root_signals_mcp.evaluator")
+logger = logging.getLogger("scorable_mcp.evaluator")
 
 
 class EvaluatorService:
-    """Service for interacting with RootSignals evaluators."""
+    """Service for interacting with Scorable evaluators."""
 
     def __init__(self) -> None:
         """Initialize the evaluator service."""
-        self.async_client = RootSignalsEvaluatorRepository(
-            api_key=settings.root_signals_api_key.get_secret_value(),
-            base_url=settings.root_signals_api_url,
+        self.async_client = ScorableEvaluatorRepository(
+            api_key=settings.scorable_api_key.get_secret_value(),
+            base_url=settings.scorable_api_url,
         )
 
     async def fetch_evaluators(self, max_count: int | None = None) -> list[EvaluatorInfo]:
@@ -45,18 +45,18 @@ class EvaluatorService:
             RuntimeError: If evaluators cannot be retrieved from the API.
         """
         logger.info(
-            f"Fetching evaluators from RootSignals API (max: {max_count or settings.max_evaluators})"
+            f"Fetching evaluators from Scorable API (max: {max_count or settings.max_evaluators})"
         )
 
         try:
             evaluators_data = await self.async_client.list_evaluators(max_count)
 
             total = len(evaluators_data)
-            logger.info(f"Retrieved {total} evaluators from RootSignals API")
+            logger.info(f"Retrieved {total} evaluators from Scorable API")
 
             return evaluators_data
 
-        except RootSignalsAPIError as e:
+        except ScorableAPIError as e:
             logger.error(f"Failed to fetch evaluators from API: {e}", exc_info=settings.debug)
             raise RuntimeError(f"Cannot fetch evaluators: {str(e)}") from e
         except ResponseValidationError as e:
@@ -120,7 +120,7 @@ class EvaluatorService:
             )
 
             return result
-        except RootSignalsAPIError as e:
+        except ScorableAPIError as e:
             logger.error(f"API error running evaluation: {e}", exc_info=settings.debug)
             raise RuntimeError(f"Failed to run evaluation: {str(e)}") from e
         except ResponseValidationError as e:
@@ -152,7 +152,7 @@ class EvaluatorService:
             )
 
             return result
-        except RootSignalsAPIError as e:
+        except ScorableAPIError as e:
             logger.error(f"API error running evaluation by name: {e}", exc_info=settings.debug)
             raise RuntimeError(f"Failed to run evaluation by name: {str(e)}") from e
         except ResponseValidationError as e:

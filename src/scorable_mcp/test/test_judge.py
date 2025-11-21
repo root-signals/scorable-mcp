@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from root_signals_mcp.judge import JudgeService
-from root_signals_mcp.root_api_client import ResponseValidationError, RootSignalsAPIError
-from root_signals_mcp.schema import JudgeEvaluatorResult, RunJudgeRequest, RunJudgeResponse
+from scorable_mcp.judge import JudgeService
+from scorable_mcp.root_api_client import ResponseValidationError, ScorableAPIError
+from scorable_mcp.schema import JudgeEvaluatorResult, RunJudgeRequest, RunJudgeResponse
 
 logger = logging.getLogger("test_judge")
 
@@ -16,7 +16,7 @@ logger = logging.getLogger("test_judge")
 @pytest.fixture
 def mock_api_client() -> Generator[MagicMock]:
     """Create a mock API client for testing."""
-    with patch("root_signals_mcp.judge.RootSignalsJudgeRepository") as mock_client_class:
+    with patch("scorable_mcp.judge.ScorableJudgeRepository") as mock_client_class:
         mock_client = MagicMock()
         mock_client.list_judges = AsyncMock()
         mock_client.run_judge = AsyncMock()
@@ -34,9 +34,9 @@ async def test_fetch_judges_passes_max_count(mock_api_client: MagicMock) -> None
 
 @pytest.mark.asyncio
 async def test_fetch_judges_handles_api_error(mock_api_client: MagicMock) -> None:
-    """Test handling of RootSignalsAPIError in fetch_judges."""
+    """Test handling of ScorableAPIError in fetch_judges."""
     service = JudgeService()
-    mock_api_client.list_judges.side_effect = RootSignalsAPIError(
+    mock_api_client.list_judges.side_effect = ScorableAPIError(
         status_code=500, detail="Internal server error"
     )
 
@@ -79,7 +79,7 @@ async def test_run_judge_passes_correct_parameters(mock_api_client: MagicMock) -
 async def test_run_judge_handles_not_found_error(mock_api_client: MagicMock) -> None:
     """Test handling of 404 errors in run_judge."""
     service = JudgeService()
-    mock_api_client.run_judge.side_effect = RootSignalsAPIError(
+    mock_api_client.run_judge.side_effect = ScorableAPIError(
         status_code=404, detail="Judge not found"
     )
 

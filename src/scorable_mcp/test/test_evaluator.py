@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from root_signals_mcp.evaluator import EvaluatorService
-from root_signals_mcp.root_api_client import (
+from scorable_mcp.evaluator import EvaluatorService
+from scorable_mcp.root_api_client import (
     ResponseValidationError,
-    RootSignalsAPIError,
+    ScorableAPIError,
 )
-from root_signals_mcp.schema import (
+from scorable_mcp.schema import (
     ArrayInputItem,
     EvaluationRequest,
     EvaluationRequestByName,
@@ -26,7 +26,7 @@ logger = logging.getLogger("test_evaluator")
 @pytest.fixture
 def mock_api_client() -> Generator[MagicMock]:
     """Create a mock API client for testing."""
-    with patch("root_signals_mcp.evaluator.RootSignalsEvaluatorRepository") as mock_client_class:
+    with patch("scorable_mcp.evaluator.ScorableEvaluatorRepository") as mock_client_class:
         mock_client = MagicMock()
         mock_client.list_evaluators = AsyncMock()
         mock_client.run_evaluator = AsyncMock()
@@ -55,9 +55,9 @@ async def test_fetch_evaluators_uses_default_when_max_count_is_none(
 
 @pytest.mark.asyncio
 async def test_fetch_evaluators_handles_api_error(mock_api_client: MagicMock) -> None:
-    """Test handling of RootSignalsAPIError in fetch_evaluators."""
+    """Test handling of ScorableAPIError in fetch_evaluators."""
     service = EvaluatorService()
-    mock_api_client.list_evaluators.side_effect = RootSignalsAPIError(
+    mock_api_client.list_evaluators.side_effect = ScorableAPIError(
         status_code=500, detail="Internal server error"
     )
 
@@ -219,7 +219,7 @@ async def test_run_evaluation_by_name_passes_correct_parameters(mock_api_client:
 async def test_run_evaluation_handles_not_found_error(mock_api_client: MagicMock) -> None:
     """Test handling of 404 errors in run_evaluation."""
     service = EvaluatorService()
-    mock_api_client.run_evaluator.side_effect = RootSignalsAPIError(
+    mock_api_client.run_evaluator.side_effect = ScorableAPIError(
         status_code=404, detail="Evaluator not found"
     )
 
@@ -238,7 +238,7 @@ async def test_run_evaluation_handles_not_found_error(mock_api_client: MagicMock
 async def test_transient_error_not_retried(mock_api_client: MagicMock) -> None:
     """Test that transient errors are not retried by default."""
     service = EvaluatorService()
-    mock_api_client.run_evaluator.side_effect = RootSignalsAPIError(
+    mock_api_client.run_evaluator.side_effect = ScorableAPIError(
         status_code=500, detail="Internal server error - may be transient"
     )
 

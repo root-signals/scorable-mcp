@@ -1,30 +1,30 @@
-"""Integration tests for the RootSignals MCP Client."""
+"""Integration tests for the Scorable MCP Client."""
 
 import logging
 from typing import Any
 
 import pytest
 
-from root_signals_mcp.client import RootSignalsMCPClient
-from root_signals_mcp.settings import settings
+from scorable_mcp.client import ScorableMCPClient
+from scorable_mcp.settings import settings
 
 pytestmark = [
     pytest.mark.skipif(
-        settings.root_signals_api_key.get_secret_value() == "",
-        reason="ROOT_SIGNALS_API_KEY environment variable not set or empty",
+        settings.scorable_api_key.get_secret_value() == "",
+        reason="SCORABLE_API_KEY environment variable not set or empty",
     ),
     pytest.mark.integration,
     pytest.mark.asyncio(loop_scope="session"),
 ]
 
-logger = logging.getLogger("root_mcp_server_tests")
+logger = logging.getLogger("scorable_mcp_tests")
 
 
 @pytest.mark.asyncio
 async def test_client_connection(compose_up_mcp_server: Any) -> None:
     """Test client connection and disconnection with a real server."""
     logger.info("Testing client connection")
-    client = RootSignalsMCPClient()
+    client = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -44,7 +44,7 @@ async def test_client_connection(compose_up_mcp_server: Any) -> None:
 async def test_client_list_tools(compose_up_mcp_server: Any) -> None:
     """Test client list_tools method with a real server."""
     logger.info("Testing list_tools")
-    client = RootSignalsMCPClient()
+    client = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -84,7 +84,7 @@ async def test_client_list_tools(compose_up_mcp_server: Any) -> None:
 async def test_client_list_evaluators(compose_up_mcp_server: Any) -> None:
     """Test client list_evaluators method with a real server."""
     logger.info("Testing list_evaluators")
-    client = RootSignalsMCPClient()
+    client = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -108,7 +108,7 @@ async def test_client_list_evaluators(compose_up_mcp_server: Any) -> None:
 async def test_client_list_judges(compose_up_mcp_server: Any) -> None:
     """Test client list_judges method with a real server."""
     logger.info("Testing list_judges")
-    client = RootSignalsMCPClient()
+    client = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -140,7 +140,7 @@ async def test_client_list_judges(compose_up_mcp_server: Any) -> None:
 async def test_client_run_evaluation(compose_up_mcp_server: Any) -> None:
     """Test client run_evaluation method with a real server."""
     logger.info("Testing run_evaluation")
-    client = RootSignalsMCPClient()
+    client = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -172,7 +172,7 @@ async def test_client_run_evaluation(compose_up_mcp_server: Any) -> None:
 async def test_client_run_judge(compose_up_mcp_server: Any) -> None:
     """Test client run_judge method with a real server."""
     logger.info("Testing run_judge")
-    client = RootSignalsMCPClient()
+    client = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -208,7 +208,7 @@ async def test_client_run_judge(compose_up_mcp_server: Any) -> None:
 async def test_client_run_evaluation_by_name(compose_up_mcp_server: Any) -> None:
     """Test client run_evaluation_by_name method with a real server."""
     logger.info("Testing run_evaluation_by_name")
-    client = RootSignalsMCPClient()
+    client = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -241,7 +241,7 @@ async def test_client_run_evaluation_by_name(compose_up_mcp_server: Any) -> None
 async def test_client_run_rag_evaluation(compose_up_mcp_server: Any) -> None:
     """Test client run_rag_evaluation method with a real server."""
     logger.info("Testing run_evaluation with contexts")
-    client = RootSignalsMCPClient()
+    client = ScorableMCPClient()
 
     try:
         await client.connect()
@@ -285,7 +285,7 @@ async def test_client_run_rag_evaluation(compose_up_mcp_server: Any) -> None:
 async def test_client_run_rag_evaluation_by_name(compose_up_mcp_server: Any) -> None:
     """Test client run_rag_evaluation_by_name method with a real server."""
     logger.info("Testing run_evaluation_by_name with contexts")
-    client = RootSignalsMCPClient()
+    client = ScorableMCPClient()
 
     try:
         await client.connect()

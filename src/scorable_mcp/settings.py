@@ -1,4 +1,4 @@
-"""Settings module for the RootSignals MCP Server.
+"""Settings module for the Scorable MCP Server.
 
 This module provides a settings model for the unified server using pydantic-settings.
 """
@@ -35,22 +35,22 @@ def get_package_version() -> str:
 
 
 class Settings(BaseSettings):
-    """Settings for the RootSignals MCP Server.
+    """Settings for the Scorable MCP Server.
 
     This class handles loading and validating configuration from environment variables.
     """
 
-    root_signals_api_key: SecretStr = Field(
+    scorable_api_key: SecretStr = Field(
         default=...,
-        description="RootSignals API key for authentication",
+        description="Scorable API key for authentication",
     )
-    root_signals_api_url: str = Field(
-        default="https://api.app.rootsignals.ai",
-        description="RootSignals API URL",
+    scorable_api_url: str = Field(
+        default="https://api.scorable.ai",
+        description="Scorable API URL",
     )
-    root_signals_api_timeout: float = Field(
+    scorable_api_timeout: float = Field(
         default=30.0,
-        description="Timeout in seconds for RootSignals API requests",
+        description="Timeout in seconds for Scorable API requests",
     )
     max_evaluators: int = Field(
         default=40,
@@ -71,7 +71,7 @@ class Settings(BaseSettings):
 
     coding_policy_evaluator_id: str = Field(
         default="4613f248-b60e-403a-bcdc-157d1c44194a",
-        description="RootSignals evaluator ID for coding policy evaluation",
+        description="Scorable evaluator ID for coding policy evaluation",
     )
 
     coding_policy_evaluator_request: str = Field(
@@ -110,5 +110,5 @@ try:
     settings = Settings()
 except Exception as e:
     sys.stderr.write(f"Error loading settings: {str(e)}\n")
-    sys.stderr.write("Check that your .env file exists with proper ROOT_SIGNALS_API_KEY\n")
+    sys.stderr.write("Check that your .env file exists with proper SCORABLE_API_KEY\n")
     raise

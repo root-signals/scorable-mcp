@@ -1,4 +1,4 @@
-"""StdIO transport for the RootSignals MCP Server.
+"""StdIO transport for the Scorable MCP Server.
 
 This module provides a dedicated implementation of the MCP server using
 Standard I/O (stdio) transport for CLI environments.
@@ -12,16 +12,16 @@ from typing import Any
 from mcp import Tool
 from mcp.types import TextContent
 
-from root_signals_mcp.core import RootMCPServerCore
-from root_signals_mcp.settings import settings
+from scorable_mcp.core import RootMCPServerCore
+from scorable_mcp.settings import settings
 
-from root_signals_mcp.fastmcp_adapter import RootSignalsFastMCP  # noqa: E501  # isort: skip
+from scorable_mcp.fastmcp_adapter import ScorableFastMCP  # noqa: E501  # isort: skip
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper()),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-logger = logging.getLogger("root_signals_mcp.stdio")
+logger = logging.getLogger("scorable_mcp.stdio")
 
 
 class StdioMCPServer:
@@ -31,7 +31,7 @@ class StdioMCPServer:
         """Initialize the stdio-based MCP server."""
         self.core = RootMCPServerCore()
 
-        self.mcp = RootSignalsFastMCP(self.core, name="RootSignals Evaluators")
+        self.mcp = ScorableFastMCP(self.core, name="Scorable Evaluators")
 
     async def list_tools(self) -> list[Tool]:
         return await self.core.list_tools()
@@ -47,13 +47,13 @@ class StdioMCPServer:
 def main() -> None:
     """Entry point for the stdio server."""
     try:
-        logger.info("Starting RootSignals MCP Server with stdio transport")
-        logger.info(f"Targeting API: {settings.root_signals_api_url}")
+        logger.info("Starting Scorable MCP Server with stdio transport")
+        logger.info(f"Targeting API: {settings.scorable_api_url}")
         logger.info(f"Environment: {settings.env}")
         logger.debug(f"Python version: {sys.version}")
-        logger.debug(f"API Key set: {bool(settings.root_signals_api_key)}")
+        logger.debug(f"API Key set: {bool(settings.scorable_api_key)}")
         asyncio.run(StdioMCPServer().run())
-        logger.info("RootSignals MCP Server (stdio) ready")
+        logger.info("Scorable MCP Server (stdio) ready")
 
     except KeyboardInterrupt:
         logger.info("Server stopped by user")

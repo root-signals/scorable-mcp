@@ -7,23 +7,23 @@ from unittest.mock import patch
 
 import pytest
 
-from root_signals_mcp.root_api_client import (
+from scorable_mcp.root_api_client import (
     ResponseValidationError,
-    RootSignalsEvaluatorRepository,
+    ScorableEvaluatorRepository,
 )
-from root_signals_mcp.schema import EvaluationRequest
-from root_signals_mcp.settings import settings
+from scorable_mcp.schema import EvaluationRequest
+from scorable_mcp.settings import settings
 
 pytestmark = [
     pytest.mark.skipif(
-        settings.root_signals_api_key.get_secret_value() == "",
-        reason="ROOT_SIGNALS_API_KEY environment variable not set or empty",
+        settings.scorable_api_key.get_secret_value() == "",
+        reason="SCORABLE_API_KEY environment variable not set or empty",
     ),
     pytest.mark.integration,
     pytest.mark.asyncio(loop_scope="session"),
 ]
 
-logger = logging.getLogger("root_mcp_server_tests")
+logger = logging.getLogger("scorable_mcp_tests")
 
 
 @pytest.mark.asyncio
@@ -332,7 +332,7 @@ async def test_run_rag_evaluation_missing_context(mcp_server: Any) -> None:
 @pytest.mark.asyncio
 async def test_sse_server_schema_evolution__handles_new_fields_gracefully() -> None:
     """Test that our models handle new fields in API responses gracefully."""
-    with patch.object(RootSignalsEvaluatorRepository, "_make_request") as mock_request:
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
         mock_request.return_value = {
             "result": {
                 "evaluator_name": "Test Evaluator",
@@ -343,7 +343,7 @@ async def test_sse_server_schema_evolution__handles_new_fields_gracefully() -> N
             }
         }
 
-        client = RootSignalsEvaluatorRepository()
+        client = ScorableEvaluatorRepository()
         result = await client.run_evaluator(
             evaluator_id="test-id", request="Test request", response="Test response"
         )
@@ -359,7 +359,7 @@ async def test_sse_server_schema_evolution__handles_new_fields_gracefully() -> N
 @pytest.mark.asyncio
 async def test_root_client_schema_compatibility__detects_api_schema_changes() -> None:
     """Test that our schema models detect changes in the API response format."""
-    with patch.object(RootSignalsEvaluatorRepository, "_make_request") as mock_request:
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
         mock_request.return_value = {
             "result": {
                 "score": 0.9,
@@ -367,7 +367,7 @@ async def test_root_client_schema_compatibility__detects_api_schema_changes() ->
             }
         }
 
-        client = RootSignalsEvaluatorRepository()
+        client = ScorableEvaluatorRepository()
 
         with pytest.raises(ResponseValidationError) as excinfo:
             await client.run_evaluator(
@@ -439,7 +439,7 @@ async def test_sse_server_unknown_tool_request__explicitly_allows_any_fields() -
     This special model is used for debugging purposes with unknown tools,
     so it needs to capture any arbitrary fields.
     """
-    from root_signals_mcp.schema import UnknownToolRequest
+    from scorable_mcp.schema import UnknownToolRequest
 
     assert UnknownToolRequest.model_config.get("extra") == "allow", (
         "UnknownToolRequest model_config should be set to allow extra fields"

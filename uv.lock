@@ -513,7 +513,7 @@ wheels = [
 ]
 
 [[package]]
-name = "root-signals-mcp"
+name = "scorable-mcp"
 version = "20250429.post1"
 source = { editable = "." }
 dependencies = [

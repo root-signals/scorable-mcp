@@ -1,4 +1,4 @@
-"""Type definitions for the RootSignals MCP Server.
+"""Type definitions for the Scorable MCP Server.
 
 This module defines Pydantic models and other types used across the server.
 """
@@ -45,8 +45,8 @@ class UnknownToolRequest(BaseToolRequest):
     }
 
 
-class BaseRootSignalsModel(BaseModel):
-    """Base class for all models that interact with the RootSignals API.
+class BaseScorableModel(BaseModel):
+    """Base class for all models that interact with the Scorable API.
 
     This class sets up handling of schema evolution to:
     1. Ignore new fields that might be added to the API in the future
@@ -66,7 +66,7 @@ class BaseRootSignalsModel(BaseModel):
 #####################################################################
 
 
-class BaseEvaluationRequest(BaseRootSignalsModel):
+class BaseEvaluationRequest(BaseScorableModel):
     """Fields common to all evaluation requests."""
 
     request: str = Field(..., description="The user query to evaluate")
@@ -92,7 +92,7 @@ class EvaluationRequestByName(BaseEvaluationRequest):
     """
     Model for evaluation request parameters.
 
-    this is based on the EvaluatorExecutionRequest model from the RootSignals API
+    this is based on the EvaluatorExecutionRequest model from the Scorable API
     """
 
     evaluator_name: str = Field(
@@ -127,7 +127,7 @@ class EvaluationRequest(BaseEvaluationRequest):
     """
     Model for evaluation request parameters.
 
-    this is based on the EvaluatorExecutionRequest model from the RootSignals API
+    this is based on the EvaluatorExecutionRequest model from the Scorable API
     """
 
     evaluator_id: str = Field(..., description="The ID of the evaluator to use")
@@ -144,10 +144,10 @@ class CodingPolicyAdherenceEvaluationRequest(BaseToolRequest):
 
 
 #####################################################################
-### Simplified RootSignals Platform API models                    ###
+### Simplified Scorable Platform API models                    ###
 ### We trim them down to save tokens                              ###
 #####################################################################
-class EvaluationResponse(BaseRootSignalsModel):
+class EvaluationResponse(BaseScorableModel):
     """
     Model for evaluation response.
 
@@ -171,7 +171,7 @@ class RequiredInput(BaseModel):
     items: ArrayInputItem | None = None
 
 
-class EvaluatorInfo(BaseRootSignalsModel):
+class EvaluatorInfo(BaseScorableModel):
     """
     Model for evaluator information.
 
@@ -196,7 +196,7 @@ class EvaluatorInfo(BaseRootSignalsModel):
         return self.inputs.get("expected_output") is not None
 
 
-class EvaluatorsListResponse(BaseRootSignalsModel):
+class EvaluatorsListResponse(BaseScorableModel):
     """List of evaluators returned by `list_evaluators`."""
 
     evaluators: list[EvaluatorInfo] = Field(..., description="List of evaluators")
@@ -211,12 +211,12 @@ class ListJudgesRequest(BaseToolRequest):
     pass
 
 
-class JudgeInfo(BaseRootSignalsModel):
+class JudgeInfo(BaseScorableModel):
     """
     Model for judge information.
     """
 
-    class NestedEvaluatorInfo(BaseRootSignalsModel):
+    class NestedEvaluatorInfo(BaseScorableModel):
         """Nested evaluator info."""
 
         name: str = Field(..., description="Name of the evaluator")
@@ -230,7 +230,7 @@ class JudgeInfo(BaseRootSignalsModel):
     description: str | None = Field(None, description="Description of the judge")
 
 
-class JudgesListResponse(BaseRootSignalsModel):
+class JudgesListResponse(BaseScorableModel):
     """Model for judges list response."""
 
     judges: list[JudgeInfo] = Field(..., description="List of judges")
@@ -262,7 +262,7 @@ class RunJudgeRequest(BaseToolRequest):
         return v
 
 
-class JudgeEvaluatorResult(BaseRootSignalsModel):
+class JudgeEvaluatorResult(BaseScorableModel):
     """Model for judge evaluator result."""
 
     evaluator_name: str = Field(..., description="Name of the evaluator")
@@ -270,7 +270,7 @@ class JudgeEvaluatorResult(BaseRootSignalsModel):
     justification: str = Field(..., description="Justification for the score")
 
 
-class RunJudgeResponse(BaseRootSignalsModel):
+class RunJudgeResponse(BaseScorableModel):
     """Model for judge response."""
 
     evaluator_results: list[JudgeEvaluatorResult] = Field(

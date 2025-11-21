@@ -1,34 +1,34 @@
-"""RootSignals judge service module.
+"""Scorable judge service module.
 
-This module handles the integration with RootSignals judges.
+This module handles the integration with Scorable judges.
 """
 
 import logging
 
-from root_signals_mcp.root_api_client import (
+from scorable_mcp.root_api_client import (
     ResponseValidationError,
-    RootSignalsAPIError,
-    RootSignalsJudgeRepository,
+    ScorableAPIError,
+    ScorableJudgeRepository,
 )
-from root_signals_mcp.schema import (
+from scorable_mcp.schema import (
     JudgeInfo,
     JudgesListResponse,
     RunJudgeRequest,
     RunJudgeResponse,
 )
-from root_signals_mcp.settings import settings
+from scorable_mcp.settings import settings
 
-logger = logging.getLogger("root_signals_mcp.judge")
+logger = logging.getLogger("scorable_mcp.judge")
 
 
 class JudgeService:
-    """Service for interacting with RootSignals judges."""
+    """Service for interacting with Scorable judges."""
 
     def __init__(self) -> None:
         """Initialize the judge service."""
-        self.async_client = RootSignalsJudgeRepository(
-            api_key=settings.root_signals_api_key.get_secret_value(),
-            base_url=settings.root_signals_api_url,
+        self.async_client = ScorableJudgeRepository(
+            api_key=settings.scorable_api_key.get_secret_value(),
+            base_url=settings.scorable_api_url,
         )
 
     async def fetch_judges(self, max_count: int | None = None) -> list[JudgeInfo]:
@@ -43,19 +43,17 @@ class JudgeService:
         Raises:
             RuntimeError: If judges cannot be retrieved from the API.
         """
-        logger.info(
-            f"Fetching judges from RootSignals API (max: {max_count or settings.max_judges})"
-        )
+        logger.info(f"Fetching judges from Scorable API (max: {max_count or settings.max_judges})")
 
         try:
             judges_data = await self.async_client.list_judges(max_count)
 
             total = len(judges_data)
-            logger.info(f"Retrieved {total} judges from RootSignals API")
+            logger.info(f"Retrieved {total} judges from Scorable API")
 
             return judges_data
 
-        except RootSignalsAPIError as e:
+        except ScorableAPIError as e:
             logger.error(f"Failed to fetch judges from API: {e}", exc_info=settings.debug)
             raise RuntimeError(f"Cannot fetch judges: {str(e)}") from e
         except ResponseValidationError as e:
@@ -102,7 +100,7 @@ class JudgeService:
             logger.info("Judge execution completed")
             return result
 
-        except RootSignalsAPIError as e:
+        except ScorableAPIError as e:
             logger.error(f"Failed to run judge: {e}", exc_info=settings.debug)
             raise RuntimeError(f"Judge execution failed: {str(e)}") from e
         except ResponseValidationError as e:
