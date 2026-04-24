@@ -14,6 +14,7 @@ from scorable_mcp.schema import (
     EvaluationResponse,
     EvaluatorInfo,
     JudgeInfo,
+    MessageTurn,
     RunJudgeRequest,
     RunJudgeResponse,
 )
@@ -278,19 +279,29 @@ class ScorableEvaluatorRepository(ScorableRepositoryBase):
     async def run_evaluator(
         self,
         evaluator_id: str,
-        request: str,
-        response: str,
+        request: str | None = None,
+        response: str | None = None,
         contexts: list[str] | None = None,
         expected_output: str | None = None,
+        tags: list[str] | None = None,
+        user_id: str | None = None,
+        session_id: str | None = None,
+        system_prompt: str | None = None,
+        turns: list[MessageTurn] | None = None,
     ) -> EvaluationResponse:
         """Run an evaluation with the specified evaluator.
 
         Args:
             evaluator_id: ID of the evaluator to use
-            request: User query/request to evaluate
-            response: Model's response to evaluate
+            request: User query/request to evaluate (single-turn)
+            response: Model's response to evaluate (single-turn)
             contexts: Optional list of context passages for RAG evaluations
             expected_output: Optional expected output for reference-based evaluations
+            tags: Optional tags for tracking
+            user_id: Optional external user identifier
+            session_id: Optional external session identifier
+            system_prompt: Optional system prompt used in the interaction
+            turns: Multi-turn conversation (use instead of request/response)
 
         Returns:
             Evaluation response with score and justification
@@ -298,16 +309,28 @@ class ScorableEvaluatorRepository(ScorableRepositoryBase):
         Raises:
             ResponseValidationError: If the response is missing required fields
         """
-        payload: dict[str, Any] = {
-            "request": request,
-            "response": response,
-        }
+        payload: dict[str, Any] = {}
+
+        if turns:
+            payload["turns"] = [t.model_dump(exclude_none=True) for t in turns]
+        else:
+            if request:
+                payload["request"] = request
+            if response:
+                payload["response"] = response
 
         if contexts:
             payload["contexts"] = contexts
-
         if expected_output:
             payload["expected_output"] = expected_output
+        if tags:
+            payload["tags"] = tags
+        if user_id:
+            payload["user_id"] = user_id
+        if session_id:
+            payload["session_id"] = session_id
+        if system_prompt:
+            payload["system_prompt"] = system_prompt
 
         response_data = await self._make_request(
             "POST", f"/v1/evaluators/execute/{evaluator_id}/", json_data=payload
@@ -332,19 +355,29 @@ class ScorableEvaluatorRepository(ScorableRepositoryBase):
     async def run_evaluator_by_name(
         self,
         evaluator_name: str,
-        request: str,
-        response: str,
+        request: str | None = None,
+        response: str | None = None,
         contexts: list[str] | None = None,
         expected_output: str | None = None,
+        tags: list[str] | None = None,
+        user_id: str | None = None,
+        session_id: str | None = None,
+        system_prompt: str | None = None,
+        turns: list[MessageTurn] | None = None,
     ) -> EvaluationResponse:
         """Run an evaluation with an evaluator specified by name.
 
         Args:
             evaluator_name: Name of the evaluator to use
-            request: User query/request to evaluate
-            response: Model's response to evaluate
+            request: User query/request to evaluate (single-turn)
+            response: Model's response to evaluate (single-turn)
             contexts: Optional list of context passages for RAG evaluations
             expected_output: Optional expected output for reference-based evaluations
+            tags: Optional tags for tracking
+            user_id: Optional external user identifier
+            session_id: Optional external session identifier
+            system_prompt: Optional system prompt used in the interaction
+            turns: Multi-turn conversation (use instead of request/response)
 
         Returns:
             Evaluation response with score and justification
@@ -352,16 +385,28 @@ class ScorableEvaluatorRepository(ScorableRepositoryBase):
         Raises:
             ResponseValidationError: If the response is missing required fields
         """
-        payload: dict[str, Any] = {
-            "request": request,
-            "response": response,
-        }
+        payload: dict[str, Any] = {}
+
+        if turns:
+            payload["turns"] = [t.model_dump(exclude_none=True) for t in turns]
+        else:
+            if request:
+                payload["request"] = request
+            if response:
+                payload["response"] = response
 
         if contexts:
             payload["contexts"] = contexts
-
         if expected_output:
             payload["expected_output"] = expected_output
+        if tags:
+            payload["tags"] = tags
+        if user_id:
+            payload["user_id"] = user_id
+        if session_id:
+            payload["session_id"] = session_id
+        if system_prompt:
+            payload["system_prompt"] = system_prompt
 
         params = {"name": evaluator_name}
 
@@ -406,8 +451,10 @@ class ScorableJudgeRepository(ScorableRepositoryBase):
         """
         max_to_fetch = max_count if max_count is not None else settings.max_judges
         page_size = min(max_to_fetch, 40)
-        initial_url = f"/v1/judges?page_size={page_size}&show_global={settings.show_public_judges}"
-        url_params = {"show_global": settings.show_public_judges}
+        initial_url = (
+            f"/v1/judges?page_size={page_size}&include_public={settings.show_public_judges}"
+        )
+        url_params = {"include_public": settings.show_public_judges}
 
         judges_raw = await self._fetch_paginated_results(
             initial_url=initial_url,
@@ -470,13 +517,34 @@ class ScorableJudgeRepository(ScorableRepositoryBase):
             ScorableAPIError: If API returns an error
         """
         logger.info(f"Running judge {run_judge_request.judge_id}")
-        logger.debug(f"Judge request: {run_judge_request.request[:100]}...")
-        logger.debug(f"Judge response: {run_judge_request.response[:100]}...")
+        if run_judge_request.turns:
+            logger.debug(f"Judge turns: {len(run_judge_request.turns)} turns")
+        else:
+            logger.debug(f"Judge request: {(run_judge_request.request or '')[:100]}...")
+            logger.debug(f"Judge response: {(run_judge_request.response or '')[:100]}...")
 
-        payload = {
-            "request": run_judge_request.request,
-            "response": run_judge_request.response,
-        }
+        payload: dict[str, Any] = {}
+
+        if run_judge_request.turns:
+            payload["turns"] = [t.model_dump(exclude_none=True) for t in run_judge_request.turns]
+        else:
+            if run_judge_request.request:
+                payload["request"] = run_judge_request.request
+            if run_judge_request.response:
+                payload["response"] = run_judge_request.response
+
+        if run_judge_request.contexts:
+            payload["contexts"] = run_judge_request.contexts
+        if run_judge_request.expected_output:
+            payload["expected_output"] = run_judge_request.expected_output
+        if run_judge_request.tags:
+            payload["tags"] = run_judge_request.tags
+        if run_judge_request.user_id:
+            payload["user_id"] = run_judge_request.user_id
+        if run_judge_request.session_id:
+            payload["session_id"] = run_judge_request.session_id
+        if run_judge_request.system_prompt:
+            payload["system_prompt"] = run_judge_request.system_prompt
 
         result = await self._make_request(
             method="POST",

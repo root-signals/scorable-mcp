@@ -117,3 +117,28 @@ async def test_run_judge_handles_validation_error(mock_api_client: MagicMock) ->
 
     assert "Invalid judge response" in str(excinfo.value)
     assert "Missing required field" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_run_judge__returns_result_with_null_score_and_justification(
+    mock_api_client: MagicMock,
+) -> None:
+    """Test that null score/justification from the API is surfaced without error (API allows null on evaluator failure)."""
+    service = JudgeService()
+    mock_response = RunJudgeResponse(
+        evaluator_results=[
+            JudgeEvaluatorResult(evaluator_name="Test", score=None, justification=None)
+        ]
+    )
+    mock_api_client.run_judge.return_value = mock_response
+
+    request = RunJudgeRequest(
+        judge_id="judge-123",
+        judge_name="Test Judge",
+        request="Hello",
+        response="Hi",
+    )
+    result = await service.run_judge(request)
+
+    assert result.evaluator_results[0].score is None
+    assert result.evaluator_results[0].justification is None

@@ -12,7 +12,7 @@ from scorable_mcp.root_api_client import (
     ScorableEvaluatorRepository,
     ScorableJudgeRepository,
 )
-from scorable_mcp.schema import EvaluatorInfo, RunJudgeRequest
+from scorable_mcp.schema import EvaluatorInfo, MessageTurn, RunJudgeRequest
 from scorable_mcp.settings import settings
 
 pytestmark = [
@@ -542,3 +542,200 @@ async def test_run_judge() -> None:
 
     logger.info(f"Evaluation score: {result.evaluator_results[0].score}")
     logger.info(f"Justification: {result.evaluator_results[0].justification}")
+
+
+@pytest.mark.asyncio
+async def test_list_judges__uses_include_public_not_show_global() -> None:
+    """Test that list_judges sends 'include_public' parameter, not the old 'show_global'."""
+    with patch.object(ScorableJudgeRepository, "_make_request") as mock_request:
+        mock_request.return_value = {"results": [], "next": ""}
+        client = ScorableJudgeRepository()
+        await client.list_judges()
+
+        first_call_url: str = mock_request.call_args_list[0].args[1]
+        assert "include_public=" in first_call_url, "URL should contain 'include_public' param"
+        assert "show_global=" not in first_call_url, "URL must not use old 'show_global' param"
+
+
+@pytest.mark.asyncio
+async def test_run_evaluator__sends_tags_user_id_session_id_system_prompt_in_payload() -> None:
+    """Test that run_evaluator includes new metadata fields in the request payload."""
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
+        mock_request.return_value = {"evaluator_name": "Test", "score": 0.9}
+        client = ScorableEvaluatorRepository()
+
+        await client.run_evaluator(
+            evaluator_id="eval-123",
+            request="Hello",
+            response="Hi",
+            tags=["prod", "v2"],
+            user_id="user-1",
+            session_id="sess-2",
+            system_prompt="Be concise",
+        )
+
+        json_data = mock_request.call_args.kwargs["json_data"]
+        assert json_data["tags"] == ["prod", "v2"]
+        assert json_data["user_id"] == "user-1"
+        assert json_data["session_id"] == "sess-2"
+        assert json_data["system_prompt"] == "Be concise"
+        assert json_data["request"] == "Hello"
+        assert json_data["response"] == "Hi"
+
+
+@pytest.mark.asyncio
+async def test_run_evaluator__sends_turns_and_omits_request_response() -> None:
+    """Test that run_evaluator uses a 'turns' payload for multi-turn and excludes request/response."""
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
+        mock_request.return_value = {"evaluator_name": "Test", "score": 0.9}
+        client = ScorableEvaluatorRepository()
+
+        await client.run_evaluator(
+            evaluator_id="eval-123",
+            turns=[
+                MessageTurn(role="user", content="What is 2+2?"),
+                MessageTurn(role="assistant", content="4"),
+            ],
+        )
+
+        json_data = mock_request.call_args.kwargs["json_data"]
+        assert "turns" in json_data
+        assert "request" not in json_data
+        assert "response" not in json_data
+        assert len(json_data["turns"]) == 2
+        assert json_data["turns"][0] == {"role": "user", "content": "What is 2+2?"}
+        assert json_data["turns"][1] == {"role": "assistant", "content": "4"}
+
+
+@pytest.mark.asyncio
+async def test_run_evaluator_by_name__sends_tags_and_new_fields_in_payload() -> None:
+    """Test that run_evaluator_by_name includes new metadata fields in the request payload."""
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
+        mock_request.return_value = {"evaluator_name": "Clarity", "score": 0.8}
+        client = ScorableEvaluatorRepository()
+
+        await client.run_evaluator_by_name(
+            evaluator_name="Clarity",
+            request="Hello",
+            response="Hi",
+            tags=["staging"],
+            user_id="u-99",
+        )
+
+        json_data = mock_request.call_args.kwargs["json_data"]
+        assert json_data["tags"] == ["staging"]
+        assert json_data["user_id"] == "u-99"
+
+
+@pytest.mark.asyncio
+async def test_run_evaluator_by_name__sends_turns_payload() -> None:
+    """Test that run_evaluator_by_name uses turns payload for multi-turn conversations."""
+    with patch.object(ScorableEvaluatorRepository, "_make_request") as mock_request:
+        mock_request.return_value = {"evaluator_name": "Clarity", "score": 0.8}
+        client = ScorableEvaluatorRepository()
+
+        await client.run_evaluator_by_name(
+            evaluator_name="Clarity",
+            turns=[MessageTurn(role="user", content="Hello")],
+        )
+
+        json_data = mock_request.call_args.kwargs["json_data"]
+        assert "turns" in json_data
+        assert "request" not in json_data
+        assert "response" not in json_data
+
+
+@pytest.mark.asyncio
+async def test_run_judge__sends_tags_and_new_fields_in_payload() -> None:
+    """Test that run_judge includes new metadata fields in the request payload."""
+    with patch.object(ScorableJudgeRepository, "_make_request") as mock_request:
+        mock_request.return_value = {
+            "evaluator_results": [{"evaluator_name": "Test", "score": 0.9, "justification": "Good"}]
+        }
+        client = ScorableJudgeRepository()
+
+        await client.run_judge(
+            RunJudgeRequest(
+                judge_id="judge-123",
+                request="Hello",
+                response="Hi",
+                tags=["prod"],
+                user_id="user-1",
+                session_id="sess-2",
+                system_prompt="Be helpful",
+            )
+        )
+
+        json_data = mock_request.call_args.kwargs["json_data"]
+        assert json_data["tags"] == ["prod"]
+        assert json_data["user_id"] == "user-1"
+        assert json_data["session_id"] == "sess-2"
+        assert json_data["system_prompt"] == "Be helpful"
+        assert json_data["request"] == "Hello"
+        assert json_data["response"] == "Hi"
+
+
+@pytest.mark.asyncio
+async def test_run_judge__sends_turns_and_omits_request_response() -> None:
+    """Test that run_judge uses a 'turns' payload for multi-turn and excludes request/response."""
+    with patch.object(ScorableJudgeRepository, "_make_request") as mock_request:
+        mock_request.return_value = {
+            "evaluator_results": [{"evaluator_name": "Test", "score": 0.9, "justification": "Good"}]
+        }
+        client = ScorableJudgeRepository()
+
+        await client.run_judge(
+            RunJudgeRequest(
+                judge_id="judge-123",
+                turns=[
+                    MessageTurn(role="user", content="Hello"),
+                    MessageTurn(role="assistant", content="Hi!", contexts=["ctx doc"]),
+                ],
+            )
+        )
+
+        json_data = mock_request.call_args.kwargs["json_data"]
+        assert "turns" in json_data
+        assert "request" not in json_data
+        assert "response" not in json_data
+        assert json_data["turns"][1]["contexts"] == ["ctx doc"]
+
+
+@pytest.mark.asyncio
+async def test_run_judge__handles_null_score_and_justification_in_response() -> None:
+    """Test that null score/justification in judge response is accepted (API allows null on failure)."""
+    with patch.object(ScorableJudgeRepository, "_make_request") as mock_request:
+        mock_request.return_value = {
+            "evaluator_results": [{"evaluator_name": "Test", "score": None, "justification": None}]
+        }
+        client = ScorableJudgeRepository()
+
+        result = await client.run_judge(
+            RunJudgeRequest(judge_id="judge-123", request="Hello", response="Hi")
+        )
+
+        assert result.evaluator_results[0].score is None
+        assert result.evaluator_results[0].justification is None
+
+
+@pytest.mark.asyncio
+async def test_run_judge__handles_confidence_field_in_response() -> None:
+    """Test that the new confidence field in judge evaluator results is parsed correctly."""
+    with patch.object(ScorableJudgeRepository, "_make_request") as mock_request:
+        mock_request.return_value = {
+            "evaluator_results": [
+                {
+                    "evaluator_name": "Test",
+                    "score": 0.9,
+                    "justification": "Good",
+                    "confidence": 0.85,
+                }
+            ]
+        }
+        client = ScorableJudgeRepository()
+
+        result = await client.run_judge(
+            RunJudgeRequest(judge_id="judge-123", request="Hello", response="Hi")
+        )
+
+        assert result.evaluator_results[0].confidence == 0.85
