@@ -117,6 +117,11 @@ class EvaluatorService:
                 response=request.response,
                 contexts=request.contexts,
                 expected_output=request.expected_output,
+                tags=request.tags,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                system_prompt=request.system_prompt,
+                turns=request.turns,
             )
 
             return result
@@ -149,6 +154,11 @@ class EvaluatorService:
                 response=request.response,
                 contexts=request.contexts,
                 expected_output=request.expected_output,
+                tags=request.tags,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                system_prompt=request.system_prompt,
+                turns=request.turns,
             )
 
             return result

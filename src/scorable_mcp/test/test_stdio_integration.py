@@ -13,6 +13,7 @@ from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.types import CallToolResult
 
+from scorable_mcp.core import RootMCPServerCore
 from scorable_mcp.settings import settings
 
 pytestmark = [
@@ -31,8 +32,6 @@ PROJECT_ROOT = Path(__file__).parents[4]
 @pytest.mark.asyncio
 async def test_direct_core_list_tools() -> None:
     """Test listing tools directly from the RootMCPServerCore."""
-    from scorable_mcp.core import RootMCPServerCore
-
     logger.info("Testing direct core tool listing")
     core = RootMCPServerCore()
 
@@ -53,8 +52,6 @@ async def test_direct_core_list_tools() -> None:
 @pytest.mark.asyncio
 async def test_direct_core_list_evaluators() -> None:
     """Test calling the list_evaluators tool directly from the RootMCPServerCore."""
-    from scorable_mcp.core import RootMCPServerCore
-
     logger.info("Testing direct core list_evaluators")
     core = RootMCPServerCore()
 
@@ -80,8 +77,6 @@ async def test_direct_core_list_evaluators() -> None:
 @pytest.mark.asyncio
 async def test_direct_core_list_judges() -> None:
     """Test calling the list_judges tool directly from the RootMCPServerCore."""
-    from scorable_mcp.core import RootMCPServerCore
-
     logger.info("Testing direct core list_judges")
     core = RootMCPServerCore()
 
@@ -160,17 +155,17 @@ async def test_stdio_client_run_evaluation_by_name() -> None:
             evaluators_json = _extract_text_payload(call_result)
             evaluators_data = json.loads(evaluators_json)
 
-            relevance_evaluator = None
-            for evaluator in evaluators_data["evaluators"]:
-                if evaluator["name"] == "Relevance":
-                    relevance_evaluator = evaluator
-                    break
+            from collections import Counter
 
-            if not relevance_evaluator:
-                for evaluator in evaluators_data["evaluators"]:
-                    if not evaluator.get("requires_contexts", False):
-                        relevance_evaluator = evaluator
-                        break
+            name_counts = Counter(e.get("name") for e in evaluators_data["evaluators"])
+            relevance_evaluator = next(
+                (
+                    e
+                    for e in evaluators_data["evaluators"]
+                    if "contexts" not in e.get("inputs", {}) and name_counts[e.get("name")] == 1
+                ),
+                None,
+            )
 
             assert relevance_evaluator is not None, "No suitable evaluator found for testing"
             logger.info(f"Using evaluator: {relevance_evaluator['name']}")

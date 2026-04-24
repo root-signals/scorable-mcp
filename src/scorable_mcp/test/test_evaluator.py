@@ -17,6 +17,7 @@ from scorable_mcp.schema import (
     EvaluationRequestByName,
     EvaluationResponse,
     EvaluatorInfo,
+    MessageTurn,
     RequiredInput,
 )
 
@@ -172,6 +173,11 @@ async def test_run_evaluation_passes_correct_parameters(mock_api_client: MagicMo
         response="Test response",
         contexts=["Test context"],
         expected_output="Test expected output",
+        tags=None,
+        user_id=None,
+        session_id=None,
+        system_prompt=None,
+        turns=None,
     )
 
     assert result.evaluator_name == "Test Evaluator"
@@ -208,6 +214,11 @@ async def test_run_evaluation_by_name_passes_correct_parameters(mock_api_client:
         response="Test response",
         contexts=["Test context"],
         expected_output="Test expected output",
+        tags=None,
+        user_id=None,
+        session_id=None,
+        system_prompt=None,
+        turns=None,
     )
 
     assert result.evaluator_name == "Test Evaluator"
@@ -250,3 +261,92 @@ async def test_transient_error_not_retried(mock_api_client: MagicMock) -> None:
         await service.run_evaluation(request)
 
     assert mock_api_client.run_evaluator.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_run_evaluation__forwards_tags_user_id_session_id_system_prompt(
+    mock_api_client: MagicMock,
+) -> None:
+    """Test that new optional metadata fields are forwarded to the API client."""
+    service = EvaluatorService()
+    mock_api_client.run_evaluator.return_value = EvaluationResponse(
+        evaluator_name="Test", score=0.9
+    )
+
+    request = EvaluationRequest(
+        evaluator_id="eval-123",
+        request="Hello",
+        response="Hi",
+        tags=["prod"],
+        user_id="user-1",
+        session_id="sess-2",
+        system_prompt="Be helpful",
+    )
+    await service.run_evaluation(request)
+
+    mock_api_client.run_evaluator.assert_called_once_with(
+        evaluator_id="eval-123",
+        request="Hello",
+        response="Hi",
+        contexts=None,
+        expected_output=None,
+        tags=["prod"],
+        user_id="user-1",
+        session_id="sess-2",
+        system_prompt="Be helpful",
+        turns=None,
+    )
+
+
+@pytest.mark.asyncio
+async def test_run_evaluation__forwards_turns_to_client(mock_api_client: MagicMock) -> None:
+    """Test that multi-turn conversations are forwarded to the API client."""
+    service = EvaluatorService()
+    mock_api_client.run_evaluator.return_value = EvaluationResponse(
+        evaluator_name="Test", score=0.9
+    )
+
+    turns = [
+        MessageTurn(role="user", content="What is 2+2?"),
+        MessageTurn(role="assistant", content="4"),
+    ]
+    request = EvaluationRequest(evaluator_id="eval-123", turns=turns)
+    await service.run_evaluation(request)
+
+    call_kwargs = mock_api_client.run_evaluator.call_args.kwargs
+    assert call_kwargs["turns"] == turns
+    assert call_kwargs["request"] is None
+    assert call_kwargs["response"] is None
+
+
+@pytest.mark.asyncio
+async def test_run_evaluation_by_name__forwards_new_fields(mock_api_client: MagicMock) -> None:
+    """Test that new optional fields are forwarded in run_evaluation_by_name."""
+    service = EvaluatorService()
+    mock_api_client.run_evaluator_by_name.return_value = EvaluationResponse(
+        evaluator_name="Clarity", score=0.8
+    )
+
+    request = EvaluationRequestByName(
+        evaluator_name="Clarity",
+        request="Hello",
+        response="Hi",
+        tags=["test"],
+        user_id="u1",
+        session_id="s1",
+        system_prompt="prompt",
+    )
+    await service.run_evaluation_by_name(request)
+
+    mock_api_client.run_evaluator_by_name.assert_called_once_with(
+        evaluator_name="Clarity",
+        request="Hello",
+        response="Hi",
+        contexts=None,
+        expected_output=None,
+        tags=["test"],
+        user_id="u1",
+        session_id="s1",
+        system_prompt="prompt",
+        turns=None,
+    )

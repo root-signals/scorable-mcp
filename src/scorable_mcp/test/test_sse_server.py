@@ -11,7 +11,7 @@ from scorable_mcp.root_api_client import (
     ResponseValidationError,
     ScorableEvaluatorRepository,
 )
-from scorable_mcp.schema import EvaluationRequest
+from scorable_mcp.schema import EvaluationRequest, UnknownToolRequest
 from scorable_mcp.settings import settings
 
 pytestmark = [
@@ -122,11 +122,8 @@ async def test_call_tool_run_evaluation(mcp_server: Any) -> None:
     evaluators_data = json.loads(list_result[0].text)
 
     standard_evaluator = next(
-        (e for e in evaluators_data["evaluators"] if e.get("name") == "Clarity"),
-        next(
-            (e for e in evaluators_data["evaluators"] if not e.get("requires_contexts", False)),
-            None,
-        ),
+        (e for e in evaluators_data["evaluators"] if "contexts" not in e.get("inputs", {})),
+        None,
     )
 
     assert standard_evaluator is not None, "No standard evaluator found"
@@ -157,12 +154,16 @@ async def test_call_tool_run_evaluation_by_name(mcp_server: Any) -> None:
     list_result = await mcp_server.call_tool("list_evaluators", {})
     evaluators_data = json.loads(list_result[0].text)
 
+    from collections import Counter
+
+    name_counts = Counter(e.get("name") for e in evaluators_data["evaluators"])
     standard_evaluator = next(
-        (e for e in evaluators_data["evaluators"] if e.get("name") == "Clarity"),
-        next(
-            (e for e in evaluators_data["evaluators"] if not e.get("requires_contexts", False)),
-            None,
+        (
+            e
+            for e in evaluators_data["evaluators"]
+            if "contexts" not in e.get("inputs", {}) and name_counts[e.get("name")] == 1
         ),
+        None,
     )
 
     assert standard_evaluator is not None, "No standard evaluator found"
@@ -197,9 +198,7 @@ async def test_call_tool_run_rag_evaluation(mcp_server: Any) -> None:
 
     rag_evaluator = next(
         (e for e in evaluators_data["evaluators"] if e.get("name") == "Faithfulness"),
-        next(
-            (e for e in evaluators_data["evaluators"] if e.get("requires_contexts") is True), None
-        ),
+        next((e for e in evaluators_data["evaluators"] if "contexts" in e.get("inputs", {})), None),
     )
 
     assert rag_evaluator is not None, "No RAG evaluator found"
@@ -234,11 +233,16 @@ async def test_call_tool_run_rag_evaluation_by_name(mcp_server: Any) -> None:
     list_result = await mcp_server.call_tool("list_evaluators", {})
     evaluators_data = json.loads(list_result[0].text)
 
+    from collections import Counter
+
+    name_counts = Counter(e.get("name") for e in evaluators_data["evaluators"])
     rag_evaluator = next(
-        (e for e in evaluators_data["evaluators"] if e.get("name") == "Faithfulness"),
-        next(
-            (e for e in evaluators_data["evaluators"] if e.get("requires_contexts") is True), None
+        (
+            e
+            for e in evaluators_data["evaluators"]
+            if "contexts" in e.get("inputs", {}) and name_counts[e.get("name")] == 1
         ),
+        None,
     )
 
     assert rag_evaluator is not None, "No RAG evaluator found"
@@ -300,16 +304,9 @@ async def test_run_rag_evaluation_missing_context(mcp_server: Any) -> None:
     list_result = await mcp_server.call_tool("list_evaluators", {})
     evaluators_data = json.loads(list_result[0].text)
 
-    rag_evaluators = [
-        e
-        for e in evaluators_data["evaluators"]
-        if any(
-            kw in e.get("name", "").lower()
-            for kw in ["faithfulness", "context", "rag", "relevance"]
-        )
-    ]
-
-    rag_evaluator = next(iter(rag_evaluators), None)
+    rag_evaluator = next(
+        (e for e in evaluators_data["evaluators"] if "contexts" in e.get("inputs", {})), None
+    )
 
     assert rag_evaluator is not None, "No RAG evaluator found"
 
@@ -439,8 +436,6 @@ async def test_sse_server_unknown_tool_request__explicitly_allows_any_fields() -
     This special model is used for debugging purposes with unknown tools,
     so it needs to capture any arbitrary fields.
     """
-    from scorable_mcp.schema import UnknownToolRequest
-
     assert UnknownToolRequest.model_config.get("extra") == "allow", (
         "UnknownToolRequest model_config should be set to allow extra fields"
     )

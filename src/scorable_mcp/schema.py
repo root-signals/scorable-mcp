@@ -3,9 +3,9 @@
 This module defines Pydantic models and other types used across the server.
 """
 
-from typing import TypeVar
+from typing import Literal, TypeVar
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator
 
 K = TypeVar("K")
 V = TypeVar("V")
@@ -66,11 +66,40 @@ class BaseScorableModel(BaseModel):
 #####################################################################
 
 
+class MessageTurn(BaseModel):
+    """A single turn in a multi-turn conversation."""
+
+    model_config = {
+        "extra": "forbid",
+    }
+
+    role: Literal["user", "assistant"] = Field(..., description="Role of the speaker")
+    content: str = Field(..., description="Content of the turn")
+    contexts: list[str] | None = Field(
+        default=None,
+        description="Context documents for this turn (assistant role only)",
+    )
+    tool_name: str | None = Field(
+        default=None,
+        description="Tool name if this turn represents a tool call result (assistant role only)",
+    )
+
+
 class BaseEvaluationRequest(BaseScorableModel):
     """Fields common to all evaluation requests."""
 
-    request: str = Field(..., description="The user query to evaluate")
-    response: str = Field(..., description="The AI assistant's response to evaluate")
+    request: str | None = Field(
+        default=None,
+        description="The user query to evaluate. Provide this with 'response' for single-turn, or use 'turns' for multi-turn conversations.",
+    )
+    response: str | None = Field(
+        default=None,
+        description="The AI assistant's response to evaluate. Provide this with 'request' for single-turn, or use 'turns' for multi-turn conversations.",
+    )
+    turns: list[MessageTurn] | None = Field(
+        default=None,
+        description="Multi-turn conversation to evaluate. Use this instead of 'request'/'response' for multi-turn conversations.",
+    )
     contexts: list[str] | None = Field(
         default=None,
         description="List of required context strings for evaluation. Used only for evaluators that have 'contexts' defined in their inputs.",
@@ -79,13 +108,36 @@ class BaseEvaluationRequest(BaseScorableModel):
         default=None,
         description="The expected LLM response. Used only for evaluators that have 'expected_output' defined in their inputs.",
     )
+    tags: list[str] | None = Field(
+        default=None,
+        description="Optional tags to attach to this evaluation for tracking and filtering.",
+    )
+    user_id: str | None = Field(
+        default=None,
+        description="Optional external user identifier for tracking evaluations per user.",
+    )
+    session_id: str | None = Field(
+        default=None,
+        description="Optional external session identifier for tracking evaluations per session.",
+    )
+    system_prompt: str | None = Field(
+        default=None,
+        description="Optional system prompt used in the LLM interaction being evaluated.",
+    )
 
-    @field_validator("request", "response")
-    @classmethod
-    def validate_not_empty(cls, v: str) -> str:  # noqa: D401 – short
-        if not v.strip():
-            raise ValueError("Field cannot be empty")
-        return v
+    @model_validator(mode="after")
+    def validate_input_format(self) -> "BaseEvaluationRequest":
+        has_turns = bool(self.turns)
+        has_single = bool(
+            (self.request and self.request.strip()) or (self.response and self.response.strip())
+        )
+        if has_turns and has_single:
+            raise ValueError("Cannot provide both 'turns' and 'request'/'response'")
+        if not has_turns and not has_single:
+            raise ValueError(
+                "Either 'turns' or at least one of 'request'/'response' must be provided"
+            )
+        return self
 
 
 class EvaluationRequestByName(BaseEvaluationRequest):
@@ -105,22 +157,6 @@ class EvaluationRequestByName(BaseEvaluationRequest):
             "Context Precision",
         ],
     )
-    request: str = Field(..., description="The user query to evaluate")
-    response: str = Field(..., description="The AI assistant's response to evaluate")
-
-    @field_validator("request")
-    @classmethod
-    def validate_request_not_empty(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("Request cannot be empty")
-        return v
-
-    @field_validator("response")
-    @classmethod
-    def validate_response_not_empty(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("Response cannot be empty")
-        return v
 
 
 class EvaluationRequest(BaseEvaluationRequest):
@@ -160,6 +196,7 @@ class EvaluationResponse(BaseScorableModel):
     justification: str | None = Field(None, description="Justification for the score")
     execution_log_id: str | None = Field(None, description="Execution log ID for use in monitoring")
     cost: float | int | None = Field(None, description="Cost of the evaluation")
+    confidence: float | None = Field(None, description="Confidence score of the evaluation (0-1)")
 
 
 class ArrayInputItem(BaseModel):
@@ -236,7 +273,7 @@ class JudgesListResponse(BaseScorableModel):
     judges: list[JudgeInfo] = Field(..., description="List of judges")
 
 
-class RunJudgeRequest(BaseToolRequest):
+class RunJudgeRequest(BaseEvaluationRequest):
     """Request model for run_judge tool."""
 
     judge_id: str = Field(..., description="The ID of the judge to use")
@@ -244,30 +281,15 @@ class RunJudgeRequest(BaseToolRequest):
         default="-",
         description="The name of the judge to use. Optional, only for logging purposes.",
     )
-    request: str = Field(..., description="The user query to evaluate")
-    response: str = Field(..., description="The AI assistant's response to evaluate")
-
-    @field_validator("request")
-    @classmethod
-    def validate_request_not_empty(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("Request cannot be empty")
-        return v
-
-    @field_validator("response")
-    @classmethod
-    def validate_response_not_empty(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("Response cannot be empty")
-        return v
 
 
 class JudgeEvaluatorResult(BaseScorableModel):
     """Model for judge evaluator result."""
 
     evaluator_name: str = Field(..., description="Name of the evaluator")
-    score: float = Field(..., description="Score of the evaluator")
-    justification: str = Field(..., description="Justification for the score")
+    score: float | None = Field(..., description="Score of the evaluator")
+    justification: str | None = Field(..., description="Justification for the score")
+    confidence: float | None = Field(None, description="Confidence score of the evaluation (0-1)")
 
 
 class RunJudgeResponse(BaseScorableModel):
@@ -276,3 +298,28 @@ class RunJudgeResponse(BaseScorableModel):
     evaluator_results: list[JudgeEvaluatorResult] = Field(
         ..., description="List of evaluator results"
     )
+
+
+# Re-export MessageTurn so callers can import it from this module
+__all__ = [
+    "ArrayInputItem",
+    "BaseEvaluationRequest",
+    "BaseScorableModel",
+    "BaseToolRequest",
+    "CodingPolicyAdherenceEvaluationRequest",
+    "EvaluationRequest",
+    "EvaluationRequestByName",
+    "EvaluationResponse",
+    "EvaluatorInfo",
+    "EvaluatorsListResponse",
+    "JudgeEvaluatorResult",
+    "JudgeInfo",
+    "JudgesListResponse",
+    "ListEvaluatorsRequest",
+    "ListJudgesRequest",
+    "MessageTurn",
+    "RequiredInput",
+    "RunJudgeRequest",
+    "RunJudgeResponse",
+    "UnknownToolRequest",
+]
