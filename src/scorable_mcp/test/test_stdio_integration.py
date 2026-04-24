@@ -13,6 +13,7 @@ from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.types import CallToolResult
 
+from scorable_mcp.core import RootMCPServerCore
 from scorable_mcp.settings import settings
 
 pytestmark = [
@@ -31,8 +32,6 @@ PROJECT_ROOT = Path(__file__).parents[4]
 @pytest.mark.asyncio
 async def test_direct_core_list_tools() -> None:
     """Test listing tools directly from the RootMCPServerCore."""
-    from scorable_mcp.core import RootMCPServerCore
-
     logger.info("Testing direct core tool listing")
     core = RootMCPServerCore()
 
@@ -53,8 +52,6 @@ async def test_direct_core_list_tools() -> None:
 @pytest.mark.asyncio
 async def test_direct_core_list_evaluators() -> None:
     """Test calling the list_evaluators tool directly from the RootMCPServerCore."""
-    from scorable_mcp.core import RootMCPServerCore
-
     logger.info("Testing direct core list_evaluators")
     core = RootMCPServerCore()
 
@@ -80,8 +77,6 @@ async def test_direct_core_list_evaluators() -> None:
 @pytest.mark.asyncio
 async def test_direct_core_list_judges() -> None:
     """Test calling the list_judges tool directly from the RootMCPServerCore."""
-    from scorable_mcp.core import RootMCPServerCore
-
     logger.info("Testing direct core list_judges")
     core = RootMCPServerCore()
 
