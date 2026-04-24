@@ -148,7 +148,7 @@ async def test_client_run_evaluation(compose_up_mcp_server: Any) -> None:
         evaluators = await client.list_evaluators()
 
         standard_evaluator = next(
-            (e for e in evaluators if not e.get("requires_contexts", False)), None
+            (e for e in evaluators if "contexts" not in e.get("inputs", {})), None
         )
 
         assert standard_evaluator is not None, "No standard evaluator found"
@@ -292,15 +292,17 @@ async def test_client_run_rag_evaluation_by_name(compose_up_mcp_server: Any) -> 
 
         evaluators = await client.list_evaluators()
 
-        faithfulness_evaluators = [
-            e
-            for e in evaluators
-            if any(kw in e.get("name", "").lower() for kw in ["faithfulness", "context", "rag"])
-            and "relevance"
-            not in e.get("name", "").lower()  # Exclude known duplicate to avoid test flakyness
-        ]
+        from collections import Counter
 
-        rag_evaluator = next(iter(faithfulness_evaluators), None)
+        name_counts = Counter(e.get("name") for e in evaluators)
+        rag_evaluator = next(
+            (
+                e
+                for e in evaluators
+                if "contexts" in e.get("inputs", {}) and name_counts[e.get("name")] == 1
+            ),
+            None,
+        )
 
         assert rag_evaluator is not None, "Required RAG evaluator not found - test cannot proceed"
 

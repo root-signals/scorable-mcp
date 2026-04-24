@@ -122,11 +122,8 @@ async def test_call_tool_run_evaluation(mcp_server: Any) -> None:
     evaluators_data = json.loads(list_result[0].text)
 
     standard_evaluator = next(
-        (e for e in evaluators_data["evaluators"] if e.get("name") == "Clarity"),
-        next(
-            (e for e in evaluators_data["evaluators"] if not e.get("requires_contexts", False)),
-            None,
-        ),
+        (e for e in evaluators_data["evaluators"] if "contexts" not in e.get("inputs", {})),
+        None,
     )
 
     assert standard_evaluator is not None, "No standard evaluator found"
@@ -157,12 +154,16 @@ async def test_call_tool_run_evaluation_by_name(mcp_server: Any) -> None:
     list_result = await mcp_server.call_tool("list_evaluators", {})
     evaluators_data = json.loads(list_result[0].text)
 
+    from collections import Counter
+
+    name_counts = Counter(e.get("name") for e in evaluators_data["evaluators"])
     standard_evaluator = next(
-        (e for e in evaluators_data["evaluators"] if e.get("name") == "Clarity"),
-        next(
-            (e for e in evaluators_data["evaluators"] if not e.get("requires_contexts", False)),
-            None,
+        (
+            e
+            for e in evaluators_data["evaluators"]
+            if "contexts" not in e.get("inputs", {}) and name_counts[e.get("name")] == 1
         ),
+        None,
     )
 
     assert standard_evaluator is not None, "No standard evaluator found"
@@ -232,9 +233,16 @@ async def test_call_tool_run_rag_evaluation_by_name(mcp_server: Any) -> None:
     list_result = await mcp_server.call_tool("list_evaluators", {})
     evaluators_data = json.loads(list_result[0].text)
 
+    from collections import Counter
+
+    name_counts = Counter(e.get("name") for e in evaluators_data["evaluators"])
     rag_evaluator = next(
-        (e for e in evaluators_data["evaluators"] if e.get("name") == "Faithfulness"),
-        next((e for e in evaluators_data["evaluators"] if "contexts" in e.get("inputs", {})), None),
+        (
+            e
+            for e in evaluators_data["evaluators"]
+            if "contexts" in e.get("inputs", {}) and name_counts[e.get("name")] == 1
+        ),
+        None,
     )
 
     assert rag_evaluator is not None, "No RAG evaluator found"

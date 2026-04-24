@@ -155,17 +155,17 @@ async def test_stdio_client_run_evaluation_by_name() -> None:
             evaluators_json = _extract_text_payload(call_result)
             evaluators_data = json.loads(evaluators_json)
 
-            relevance_evaluator = None
-            for evaluator in evaluators_data["evaluators"]:
-                if evaluator["name"] == "Relevance":
-                    relevance_evaluator = evaluator
-                    break
+            from collections import Counter
 
-            if not relevance_evaluator:
-                for evaluator in evaluators_data["evaluators"]:
-                    if not evaluator.get("requires_contexts", False):
-                        relevance_evaluator = evaluator
-                        break
+            name_counts = Counter(e.get("name") for e in evaluators_data["evaluators"])
+            relevance_evaluator = next(
+                (
+                    e
+                    for e in evaluators_data["evaluators"]
+                    if "contexts" not in e.get("inputs", {}) and name_counts[e.get("name")] == 1
+                ),
+                None,
+            )
 
             assert relevance_evaluator is not None, "No suitable evaluator found for testing"
             logger.info(f"Using evaluator: {relevance_evaluator['name']}")

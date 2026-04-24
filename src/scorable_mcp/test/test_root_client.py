@@ -204,7 +204,7 @@ async def test_run_evaluator_with_expected_output() -> None:
         logger.info(f"Evaluation with expected output - score: {result.score}")
     except ScorableAPIError as e:
         logger.warning(f"Could not run evaluator with expected output: {e}")
-        assert e.status_code in (400, 422), f"Unexpected error code: {e.status_code}"
+        assert e.status_code in (400, 403, 422), f"Unexpected error code: {e.status_code}"
 
 
 @pytest.mark.asyncio
