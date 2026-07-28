@@ -26,6 +26,28 @@
 
 # Scorable MCP Server
 
+> [!WARNING]
+> **This repository is deprecated and no longer maintained.**
+>
+> Scorable now runs a **hosted remote MCP server** at `https://api.scorable.ai/mcp`. It needs no
+> installation, no local process, and no container, and it tracks the platform automatically.
+>
+> ```bash
+> claude mcp add --transport http scorable https://api.scorable.ai/mcp \
+>   --header "Authorization: Bearer $SCORABLE_API_KEY"
+> ```
+>
+> The hosted server covers everything this one did and more: alongside running evaluators and
+> judges it can list, create, and update them, generate a judge from a plain-language
+> description, and query past execution logs — 14 tools in total. It also scores whole
+> conversations, not just single request/response pairs.
+>
+> See the [MCP Server documentation](https://docs.scorable.ai/integrations/mcp-server) for
+> install instructions for Claude Code, Codex, Cursor, and other clients.
+>
+> This repository stays available for anyone who specifically needs a stdio transport or wants
+> to run the MCP layer inside their own network, but it will not receive further updates.
+
 A [Model Context Protocol](https://modelcontextprotocol.io/introduction) (*MCP*) server that exposes **Scorable** evaluators as tools for AI assistants & agents.
 
 ## Overview
